@@ -1,0 +1,24 @@
+# 敏感信息
+.env
+.env.local
+*.env
+
+
+# Python
+__pycache__/
+*.py[cod]
+venv/
+retail_env/
+*.pkl
+
+# Node
+node_modules/
+dist/
+
+# 数据文件
+retail.db
+data/raw/*.csv
+data/processed/*.csv
+chroma_db/env
+src/data_pipeline/data/
+chroma_db/
