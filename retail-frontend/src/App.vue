@@ -69,14 +69,14 @@
               <el-card shadow="hover" class="kpi-card">
                 <div class="kpi-title">预测用户流失率</div>
                 <div class="kpi-value">15.95%</div>
-                <div class="kpi-trend down">环比上月 -0.2%</div>
+                <div class="kpi-trend">模拟数据集标签占比</div>
               </el-card>
             </el-col>
             <el-col :span="8">
               <el-card shadow="hover" class="kpi-card">
                 <div class="kpi-title">模型 AUC 评估</div>
-                <div class="kpi-value">0.856</div>
-                <div class="kpi-trend up">KS: 0.42</div>
+                <div class="kpi-value">0.82</div>
+                <div class="kpi-trend up">KS: 0.56</div>
               </el-card>
             </el-col>
           </el-row>
