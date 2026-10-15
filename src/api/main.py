@@ -3,11 +3,12 @@ from fastapi import FastAPI, HTTPException, Request, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 import sqlite3
+import json
 import sys
 import os
 
@@ -15,14 +16,14 @@ import os
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(BASE_DIR)
 
-from src.agents.graph_workflow import build_agent_workflow
+from src.agents.graph_workflow import run_agent
 
-# 🌟 反馈数据库路径：复用项目根目录的 retail.db（与 data_pipeline / tools 保持一致）
+# 🌟 数据库路径：复用项目根目录的 retail.db（与 data_pipeline / tools 保持一致）
 DB_PATH = os.path.join(BASE_DIR, 'retail.db')
 
 
 def init_feedback_table():
-    """应用启动时确保 feedback 表已创建（幂等，不重复创建、不清空已有数据）"""
+    """应用启动时确保 feedback / recall_tasks 表已创建（幂等，不重复创建、不清空已有数据）"""
     conn = sqlite3.connect(DB_PATH)
     try:
         conn.execute(
@@ -36,12 +37,23 @@ def init_feedback_table():
             )
             """
         )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS recall_tasks (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_ids TEXT NOT NULL,
+                user_count INTEGER NOT NULL,
+                status TEXT NOT NULL DEFAULT 'created',
+                created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+            )
+            """
+        )
         conn.commit()
     finally:
         conn.close()
 
 
-# 启动时初始化反馈表
+# 启动时初始化数据表
 init_feedback_table()
 
 app = FastAPI(
@@ -89,25 +101,59 @@ async def global_exception_handler(request: Request, exc: Exception):
         content={"status": "error", "message": f"服务器内部错误：{str(exc)}", "data": None},
     )
 
-agent_app = build_agent_workflow()
 
+# ======================================================================
+# 响应模型
+# ======================================================================
 class QueryRequest(BaseModel):
     query: str
-    image_base64: str = "" # 允许前端传图片
+    image_base64: str = ""
+
+
+class ExecutionRecord(BaseModel):
+    name: str
+    input: Dict[str, Any] = Field(default_factory=dict)
+    status: str
+    summary: str = ""
+    error: str = ""
+    duration_ms: Optional[float] = None
+    sql: str = ""
+    source: str = ""
+
+
+class ReportSection(BaseModel):
+    title: str
+    content: str
+
+
+class MacroPoint(BaseModel):
+    date: str
+    value: float
+    yoy: float
+
+
+class AnalyzeData(BaseModel):
+    macro: List[MacroPoint] = Field(default_factory=list)
+    forecast: Optional[Dict[str, Any]] = None
+    churn: Optional[Dict[str, Any]] = None
+
 
 class ReportResponse(BaseModel):
     report: str
-    sql: str = ""
-    data_count: int = 0
-    kb_fragments: str = ""
+    intent: str = ""
+    intent_reason: str = ""
     generation_status: str = "success"
     fallback_reason: str = ""
+    sections: List[ReportSection] = Field(default_factory=list)
+    execution: List[ExecutionRecord] = Field(default_factory=list)
+    data: AnalyzeData = Field(default_factory=AnalyzeData)
+    kb_fragments: str = ""
 
 
 class FeedbackRequest(BaseModel):
     """用户对 AI 报告的点赞/踩反馈"""
     query: str = ""
-    feedback: str = "up"  # 'up' 好评 / 'down' 差评
+    feedback: str = "up"
     report: str = ""
 
 
@@ -117,7 +163,6 @@ class FeedbackResponse(BaseModel):
 
 
 class FeedbackRecord(BaseModel):
-    """单条反馈记录"""
     id: int
     query: str
     feedback: str
@@ -126,7 +171,6 @@ class FeedbackRecord(BaseModel):
 
 
 class FeedbackListData(BaseModel):
-    """反馈分页数据"""
     records: List[FeedbackRecord]
     total: int
     page: int
@@ -140,7 +184,6 @@ class FeedbackListResponse(BaseModel):
 
 
 class FeedbackStatsData(BaseModel):
-    """反馈统计数据"""
     total: int
     up_count: int
     down_count: int
@@ -154,20 +197,17 @@ class FeedbackStatsResponse(BaseModel):
 
 
 class ForecastMetrics(BaseModel):
-    """时序回测指标"""
     mae: float
     rmse: float
     mape: float
 
 
 class AnomalyPoint(BaseModel):
-    """异常月份"""
     date: str
     value: float
 
 
 class ForecastResponse(BaseModel):
-    """社零总额时序预测响应（结构化字段，供前端 ECharts 直接对接）"""
     historical_dates: List[str]
     historical_values: List[float]
     forecast_dates: List[str]
@@ -177,47 +217,198 @@ class ForecastResponse(BaseModel):
     metrics: ForecastMetrics
     anomalies: List[AnomalyPoint] = Field(default_factory=list)
 
+
+class RecallRequest(BaseModel):
+    user_ids: List[int]
+
+
+# ======================================================================
+# 基础接口
+# ======================================================================
 @app.get("/")
 def read_root():
     return {"message": "欢迎使用零售消费品智能洞察 API", "docs_url": "/docs"}
 
+
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
+
+
+# ======================================================================
+# 智能问数 Agent
+# ======================================================================
 @app.post("/api/v1/analyze", response_model=ReportResponse)
 @limiter.limit("5/minute")
 async def analyze_retail_data(request: Request, body: QueryRequest):
-    """接收自然语言提问，调用底层 Agent 返回结构化诊断报告（限流 5 次/分钟）"""
+    """
+    接收自然语言提问，执行「意图识别 → 条件路由 → 真实工具调用 → 报告生成」，
+    返回结构化报告、六段式小节、统一执行追踪与图表数据。
+    """
+    if not body.query or not body.query.strip():
+        raise HTTPException(status_code=400, detail="问题内容不能为空")
+
     try:
-        result = agent_app.invoke({
-            "query": body.query,
-            "image_base64": body.image_base64,
-            "final_report": ""
-        })
-        # 🌟 同时返回执行明细（SQL / 数据量 / 知识库片段）与生成状态，供前端展示
+        result = run_agent(body.query, body.image_base64)
+
+        macro_payload = result.get("macro_payload") or []
+        forecast_payload = result.get("forecast_payload")
+        churn_payload = result.get("churn_payload")
+
         return ReportResponse(
             report=result["final_report"],
-            sql=result.get("sql_statements", ""),
-            data_count=result.get("data_count", 0),
-            kb_fragments=result.get("kb_fragments", ""),
+            intent=result.get("intent", ""),
+            intent_reason=result.get("intent_reason", ""),
             generation_status=result.get("generation_status", "success"),
             fallback_reason=result.get("fallback_reason", ""),
+            sections=[
+                ReportSection(title=s["title"], content=s["content"])
+                for s in result.get("report_sections", [])
+            ],
+            execution=[
+                ExecutionRecord(**rec) for rec in result.get("execution_trace", [])
+            ],
+            data=AnalyzeData(
+                macro=[MacroPoint(**p) for p in macro_payload],
+                forecast=forecast_payload,
+                churn=churn_payload,
+            ),
+            kb_fragments=result.get("kb_fragments", ""),
         )
+    except HTTPException:
+        raise
     except Exception as e:
-        # 异常降级机制（JD3 要求）：整个 Agent 流程异常时标记为 failed
+        # 异常降级机制：整个 Agent 流程异常时标记为 failed
         return ReportResponse(
             report=f"系统繁忙，AI 分析服务暂时降级。错误信息: {str(e)}",
+            intent="",
+            intent_reason="",
             generation_status="failed",
             fallback_reason=f"系统异常：{str(e)}",
+            sections=[],
+            execution=[],
+            data=AnalyzeData(),
         )
 
+
+# ======================================================================
+# 用户流失预测（真实批量推理）
+# ======================================================================
+@app.get("/api/v1/churn/predict")
+def churn_predict(top_n: int = Query(20, ge=1, le=100)):
+    """对真实（模拟）流失数据集执行 LightGBM 批量推理，返回风险分布 / 高风险用户 / 特征归因"""
+    try:
+        from src.models.churn_inference import predict_batch
+        result = predict_batch(top_n=top_n)
+        if "error" in result:
+            raise HTTPException(status_code=500, detail=result["error"])
+        return {"status": "ok", "message": "查询成功", "data": result}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"流失预测服务暂时不可用: {str(e)}")
+
+
+@app.post("/api/v1/churn/recall")
+def create_recall_task(request: RecallRequest):
+    """创建批量召回任务（持久化至 recall_tasks 表，真实创建后端任务记录）"""
+    if not request.user_ids:
+        raise HTTPException(status_code=400, detail="请至少选择一位用户")
+    # 去重、限制单次上限，避免异常入参
+    user_ids = list(dict.fromkeys(request.user_ids))[:500]
+    if not user_ids:
+        raise HTTPException(status_code=400, detail="请至少选择一位有效用户")
+
+    conn = sqlite3.connect(DB_PATH)
+    try:
+        cur = conn.execute(
+            "INSERT INTO recall_tasks (user_ids, user_count, status) VALUES (?, ?, 'created')",
+            (json.dumps(user_ids), len(user_ids)),
+        )
+        conn.commit()
+        task_id = cur.lastrowid
+        return {
+            "status": "ok",
+            "message": "召回任务已创建",
+            "data": {"task_id": task_id, "user_count": len(user_ids), "status": "created"},
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"召回任务创建失败: {str(e)}")
+    finally:
+        conn.close()
+
+
+# ======================================================================
+# 数据总览（真实数据，供前端 KPI 卡片）
+# ======================================================================
+@app.get("/api/v1/overview")
+def overview():
+    """返回数据总览所需的真实指标：最新社零、流失标签占比、时序回测指标等"""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        conn.row_factory = sqlite3.Row
+        latest = conn.execute(
+            "SELECT date, retail_sales_current, yoy_growth FROM macro_retail_sales "
+            "ORDER BY date DESC LIMIT 1"
+        ).fetchone()
+        churn_row = conn.execute(
+            "SELECT COUNT(*) AS total, AVG(is_churn) AS rate FROM churn_dataset"
+        ).fetchone()
+        conn.close()
+
+        latest_macro = {
+            "date": str(latest["date"])[:7] if latest else "",
+            "value": round(float(latest["retail_sales_current"]), 1) if latest else 0.0,
+            "yoy": round(float(latest["yoy_growth"]), 2) if latest else 0.0,
+        }
+        churn_total = int(churn_row["total"]) if churn_row["total"] is not None else 0
+        churn_rate = round(float(churn_row["rate"]), 4) if churn_row["rate"] is not None else 0.0
+
+        # 时序回测指标（真实计算）
+        forecast_metrics = None
+        try:
+            from src.models.train_timeseries import run_forecast
+            f = run_forecast(steps=3, test_months=3, order=(1, 1, 1))
+            forecast_metrics = f["metrics"]
+        except Exception:
+            forecast_metrics = None
+
+        # 训练期评估指标（训练脚本输出，当前数据快照，非实时计算）
+        model_eval = {
+            "auc": 0.82,
+            "ks": 0.56,
+            "note": "训练期评估指标（当前数据快照，由训练脚本打印，非运行时实时计算）",
+        }
+
+        return {
+            "status": "ok",
+            "message": "查询成功",
+            "data": {
+                "latest_macro": latest_macro,
+                "churn": {
+                    "total": churn_total,
+                    "label_rate": churn_rate,
+                    "data_note": "模拟数据（RFM 规则生成），不代表真实企业客户",
+                },
+                "forecast_metrics": forecast_metrics,
+                "model_eval": model_eval,
+            },
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"数据总览查询失败: {str(e)}")
+
+
+# ======================================================================
+# 反馈闭环
+# ======================================================================
 @app.post("/api/v1/feedback", response_model=FeedbackResponse)
 def receive_feedback(request: FeedbackRequest):
     """接收用户对 AI 报告的点赞/踩反馈，持久化到 SQLite feedback 表"""
-    # 校验反馈类型，避免非法数据入库
     if request.feedback not in ("up", "down"):
         raise HTTPException(status_code=400, detail="反馈类型仅支持 up 或 down")
 
     conn = sqlite3.connect(DB_PATH)
     try:
-        # 参数化 SQL，避免 SQL 注入
         conn.execute(
             "INSERT INTO feedback (query, feedback, report) VALUES (?, ?, ?)",
             (request.query, request.feedback, request.report),
@@ -225,7 +416,6 @@ def receive_feedback(request: FeedbackRequest):
         conn.commit()
         return FeedbackResponse(status="ok", message="感谢反馈")
     except Exception as e:
-        # 数据库异常时如实报错，不假装保存成功
         raise HTTPException(status_code=500, detail=f"反馈保存失败: {str(e)}")
     finally:
         conn.close()
@@ -238,7 +428,6 @@ def list_feedback(
     feedback: Optional[str] = Query(None),
 ):
     """分页查询反馈记录（按提交时间倒序，最新在前）"""
-    # 校验反馈类型，仅允许 up / down / 不传
     if feedback is not None and feedback not in ("up", "down"):
         raise HTTPException(status_code=400, detail="feedback 参数仅支持 up 或 down")
 
@@ -298,7 +487,6 @@ def feedback_stats():
         down_count = conn.execute(
             "SELECT COUNT(*) AS c FROM feedback WHERE feedback = 'down'"
         ).fetchone()["c"]
-        # 无反馈时 up_rate 返回 0，避免除零错误
         up_rate = round(up_count / total, 4) if total > 0 else 0.0
 
         return FeedbackStatsResponse(
@@ -314,19 +502,15 @@ def feedback_stats():
         conn.close()
 
 
+# ======================================================================
+# 时序预测
+# ======================================================================
 @app.get("/api/v1/forecast", response_model=ForecastResponse)
 def forecast_retail_sales():
     """读取宏观社零数据，训练 ARIMA(1,1,1) 并返回结构化预测结果（含置信区间与异常点）"""
     try:
-        # 延迟导入：statsmodels 仅在真正调用时才需要，避免影响其他接口启动
         from src.models.train_timeseries import run_forecast
         result = run_forecast(steps=3, test_months=3, order=(1, 1, 1))
         return ForecastResponse(**result)
     except Exception as e:
-        # 异常降级机制（JD3 要求）：返回可读的 500 错误而非进程崩溃
         raise HTTPException(status_code=500, detail=f"时序预测服务暂时不可用: {str(e)}")
-
-
-@app.get("/health")
-def health_check():
-    return {"status": "ok"}

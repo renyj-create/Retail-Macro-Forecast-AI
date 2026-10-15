@@ -85,9 +85,9 @@
 - 对未命中场景明确返回「未在知识库中找到相关研报」，拒绝编造。
 
 ### 2.3 可解释性与防幻觉
-- 通过 System Prompt 约束大模型输出三段式结构：【SQL查询结果】、【知识库引用】、【执行摘要】。
-- 约束模型不得自行编造数据，缺失数据须输出「暂无数据」。
-- 前端提供「查看执行明细」折叠面板，可追溯原始 SQL、数据量、ChromaDB 原文片段，增强过程透明度。
+- 通过 System Prompt 约束大模型输出**六段式结构**：【核心结论】、【数据依据】、【趋势与预测分析】、【异常与风险】、【建议的下一步分析】、【结果限制与不确定性】。
+- 约束模型只允许使用工具真实返回的数据，缺失数据须输出「暂无数据」，严禁自行计算或编造。
+- 前端提供「执行明细」面板，可追溯意图识别结果、实际调用的工具、原始 SQL、ChromaDB 原文片段与来源、以及报告是否为大模型生成还是模板降级。
 
 ### 2.4 异常降级与状态透传
 - 各工具与 API 均实现 `try/except` 降级，模型或依赖不可用时返回可读错误而非进程崩溃。
@@ -161,8 +161,8 @@ flowchart TB
 |---------|---------|---------|
 | 宏观数据采集 | AKShare + SQLAlchemy | 2008-01 至 2026-08 月度社零数据 |
 | 特征工程 | Pandas + 类别编码 | RFM 特征、城市等级 one-hot |
-| 用户流失预测 | LightGBM + 类别不平衡处理 | 流失概率（训练脚本输出 AUC / KS / 分类报告） |
-| 可解释性 | SHAP TreeExplainer | 特征归因（训练脚本内计算，未在 API/前端展示） |
+| 用户流失预测 | LightGBM + 类别不平衡处理 | 批量流失概率 + 风险分布（真实推理接口） |
+| 可解释性 | SHAP TreeExplainer | 特征归因（推理接口实时返回，前端图表展示） |
 | 时间序列预测 | statsmodels ARIMA(1,1,1) | 未来 3 个月预测 + 95% 置信区间 |
 | 历史回测 | 最后 3 期留出评估 | MAE / RMSE / MAPE |
 | 异常检测 | sklearn IsolationForest（contamination=0.05） | 异常月份标记 |
@@ -182,13 +182,16 @@ flowchart TB
 
 | 工具方法 | 能力 | 输入 | 输出 |
 |---------|------|------|------|
-| `query_macro_sqlite()` | 固定 SQL 查询宏观社零数据 | — | 最新 3 期社零额与同比增速 |
-| `predict_churn_lightgbm()` | 用户流失预测（固定示例用户） | RFM + 城市等级特征 | 流失概率 |
-| `forecast_timeseries()` | 时序预测 | — | 未来 3 个月预测 + 置信区间 + MAPE |
+| `query_macro_sqlite()` | SQL 查询宏观社零数据 | limit（默认 12） | 最近 N 期社零额与同比增速 + 趋势摘要 |
+| `forecast_timeseries()` | ARIMA 时序预测 + 异常检测 | — | 未来 3 个月预测 + 置信区间 + 回测 MAPE + 异常月份 |
+| `predict_churn_batch()` | 用户流失批量推理（真实模型） | top_n | 风险分布 + 高风险用户 + SHAP 特征归因 |
+| `predict_churn_lightgbm()` | 单用户流失预测（示例） | RFM + 城市等级特征 | 流失概率 |
 | `evaluate_ab_test(control, treatment)` | A/B 检验 | 两组样本 | Levene + t 检验 + Uplift 报告 |
-| `rag_search(query)` | 知识库检索 | 自然语言问题 | 知识库原文片段 |
+| `rag_search(query)` | 知识库检索 | 自然语言问题 | 知识库原文片段 + 来源 |
 
-> 所有工具均实现**异常捕获与优雅降级**：模型或依赖不可用时返回可读的错误信息，而非进程崩溃，保障 Agent 主链路稳定。
+> 工作流按意图路由调用上述工具：**宏观分析** → `query_macro_sqlite` + `forecast_timeseries`；**流失预测** → `predict_churn_batch`；**综合分析** → 三者组合。`evaluate_ab_test` 当前可用但未接入工作流。
+>
+> 所有工具均实现**异常捕获与优雅降级**：模型或依赖不可用时返回可读的错误信息，而非进程崩溃，保障 Agent 主链路稳定。每个工具调用都会写入统一执行记录（工具名 / 输入 / 状态 / 耗时 / 错误 / 摘要），供前端执行明细面板展示。
 
 ---
 
@@ -257,6 +260,15 @@ npm run dev          # 开发模式，默认 http://localhost:5173
 
 打开浏览器访问前端页面，可查看「数据总览」、「用户流失预警」、「智能问数 Agent」与「报告反馈管理」四大模块。
 
+### 6.6 运行测试
+
+```bash
+# 在项目根目录执行（使用 conda 环境 retail_env）
+python -m unittest discover -s src/tests -v
+```
+
+测试覆盖：意图路由、工具执行、报告降级、六段式解析、LangGraph 路由与执行追踪、FastAPI 集成接口（`/forecast`、`/churn/predict`、`/churn/recall`、`/analyze`、`/overview`）。测试通过将 `graph_workflow.client` 置空强制走规则降级 + 模板兜底，不依赖外部大模型 API。
+
 ---
 
 ## 7. API 接口一览
@@ -265,8 +277,11 @@ npm run dev          # 开发模式，默认 http://localhost:5173
 |------|------|------|
 | `GET` | `/` | 服务欢迎信息 |
 | `GET` | `/health` | 健康检查 |
-| `POST` | `/api/v1/analyze` | 自然语言问数（AI Agent 诊断报告，限流 5 次/分钟/IP） |
+| `POST` | `/api/v1/analyze` | 自然语言问数（意图路由 + 真实工具 + 六段式报告 + 执行追踪 + 图表数据，限流 5 次/分钟/IP） |
 | `GET` | `/api/v1/forecast` | 社零总额 ARIMA 预测（供前端 ECharts 使用） |
+| `GET` | `/api/v1/churn/predict` | 用户流失批量推理（风险分布 / 高风险用户 / SHAP 特征归因） |
+| `POST` | `/api/v1/churn/recall` | 创建批量召回任务（持久化至 recall_tasks 表） |
+| `GET` | `/api/v1/overview` | 数据总览真实指标（最新社零 / 流失标签占比 / 回测指标） |
 | `POST` | `/api/v1/feedback` | 提交用户反馈（up/down），持久化至 SQLite |
 | `GET` | `/api/v1/feedback` | 分页查询反馈记录（支持筛选） |
 | `GET` | `/api/v1/feedback/stats` | 反馈统计（总数/点赞/点踩/点赞率） |
@@ -292,6 +307,34 @@ npm run dev          # 开发模式，默认 http://localhost:5173
 
 > 上述数值为当前数据快照下、`ARIMA(1,1,1)` 以最后 3 个月作为留出回测窗口计算得到的结果；不同数据快照下数值会变化，见第 9 节。
 
+`/api/v1/analyze` 响应示例（节选，展示结构化执行链路）：
+
+```json
+{
+  "report": "===== 零售业务智能洞察报告 =====\n\n【核心结论】…\n【数据依据】…",
+  "intent": "综合分析",
+  "intent_reason": "大模型识别",
+  "generation_status": "success",
+  "fallback_reason": "",
+  "sections": [
+    { "title": "【核心结论】", "content": "…" },
+    { "title": "【数据依据】", "content": "…" }
+  ],
+  "execution": [
+    { "name": "intent_recognition", "status": "success", "summary": "识别意图为「综合分析」", "duration_ms": 812.3 },
+    { "name": "query_macro_sqlite", "status": "success", "sql": "SELECT date, …", "duration_ms": 1.5 },
+    { "name": "forecast_timeseries", "status": "success", "summary": "回测 MAPE=4.36%", "duration_ms": 210.4 },
+    { "name": "predict_churn_batch", "status": "success", "summary": "共对 4766 名模拟用户执行流失预测", "duration_ms": 1348.0 },
+    { "name": "report_generation", "status": "success", "summary": "大模型生成报告" }
+  ],
+  "data": {
+    "macro": [{ "date": "2026-08", "value": 39824.4, "yoy": 0.4 }],
+    "forecast": { "historical_dates": [], "forecast_values": [], "anomalies": [] },
+    "churn": { "risk_distribution": [], "feature_importance": [], "top_risk_users": [] }
+  }
+}
+```
+
 `/api/v1/feedback/stats` 响应示例：
 
 ```json
@@ -313,11 +356,16 @@ retail_insight_platform/
 │   │   ├── fetch_macro.py          # AKShare 采集宏观社零数据
 │   │   └── generate_mock_data.py   # 模拟用户/交易数据 + RFM 特征 + 流失标签
 │   ├── models/                     # 模型训练与推理
-│   │   ├── train_lgbm_churn.py     # LightGBM 流失预测 + SHAP
+│   │   ├── train_lgbm_churn.py     # LightGBM 流失预测 + SHAP（训练）
+│   │   ├── churn_inference.py      # LightGBM 批量推理 + SHAP 归因（服务化）
 │   │   └── train_timeseries.py     # ARIMA 预测 + 异常检测 + 回测
 │   ├── agents/                     # AI Agent 编排
 │   │   ├── tools.py                # 本地工具封装（类名 MCPToolServer，非 MCP 协议）
 │   │   └── graph_workflow.py       # LangGraph 工作流
+│   ├── tests/                      # 单元与集成测试
+│   │   ├── test_agent.py           # 工具 / 意图 / 兜底 / 解析测试
+│   │   ├── test_workflow.py        # LangGraph 路由与执行追踪测试
+│   │   └── test_api.py             # FastAPI 集成测试
 │   └── api/
 │       └── main.py                 # FastAPI 接口
 ├── docs/
@@ -388,7 +436,7 @@ retail_insight_platform/
 
 - **技术选择**：基于 RFM 特征与城市等级 one-hot 特征训练 LightGBM，使用 `scale_pos_weight` 处理类别不平衡。
 - **验证结果**：模拟数据流失标签占比约 15.95%；训练脚本在 `random_state=42` 的 20% 测试集上评估（AUC 约 0.82、KS 约 0.56）。这些指标由训练脚本打印输出，未通过 API 或前端动态展示。
-- **当前局限**：流失标签为规则生成（非真实业务流失），模型在默认 0.5 阈值下分类 F1≈0（模型偏向概率排序而非硬分类），实际落地需结合业务做阈值调优；前端「用户流失预警」页与「智能问数」中的流失预测工具使用固定示例用户/静态演示数据，未接入真实批量推理接口。
+- **当前局限**：流失标签为规则生成（非真实业务流失），模型在默认 0.5 阈值下分类 F1≈0（模型偏向概率排序而非硬分类）。因此风险等级不再使用绝对概率阈值，而是基于当前样本概率分位数（P50/P80/P95）划分四档，实际落地仍需结合业务做阈值调优。前端「用户流失预警」页与「智能问数」中的流失预测工具均已接入真实批量推理接口（`/api/v1/churn/predict`）。
 
 ### 9.6 优雅降级：AI 系统的稳定性保障
 
@@ -406,11 +454,11 @@ retail_insight_platform/
 
 - **MCP / 工具封装**：当前为进程内普通 Python 函数封装，未接入 MCP 协议；如需标准化工具协议，可后续迁移至 MCP SDK 或独立工具服务。
 - **SQL 查询**：宏观数据查询为代码中固定的业务 SQL，并非 Text-to-SQL（自然语言自动生成 SQL）。
-- **多模态识图**：前端支持上传图片并转为 Base64 传输，但后端对图片的处理为**预留接口**（当前返回固定占位文本），未接入真实视觉模型。
+- **多模态识图**：前端支持上传图片并转为 Base64 传输，但后端**未接入真实视觉模型**（界面上已明确标注「多模态识图未接入」，不会伪造识图结果）。
 - **RAG**：使用字符级 TF-IDF，而非稠密语义 Embedding；对同义改写和复杂语义的召回能力有限。
 - **向量库**：每次调用都重建 ChromaDB 集合，适合小规模演示，不适合大语料高并发；生产环境应将文档解析、向量化与入库作为独立的离线/增量任务。
-- **反馈闭环**：已实现反馈持久化落库与管理页查询；但「批量召回计划」仍为前端交互演示，未在真实后端创建任务或向用户发送营销信息。
-- **用户流失预警**：前端流失预警表格与 KPI 卡片为静态演示数据，未接入真实批量推理接口。
+- **反馈闭环**：已实现反馈持久化落库与管理页查询；「批量召回」已能在真实后端创建召回任务（持久化至 `recall_tasks` 表并返回任务编号），但**尚未接入真实营销触达通道**（不会真的向用户发送信息）。
+- **用户流失预警**：前端流失预警表格、风险分布与特征重要性均已接入真实批量推理接口 `/api/v1/churn/predict`；数据为 RFM 模拟数据，界面已明确标注。
 - **报告导出**：使用浏览器 `window.print()`，不是由服务端生成和存档 PDF。
 - **限流**：单机内存限流（5 次/分钟/IP）不适合多实例生产环境，后续应迁移到 Redis 等共享存储。
 - **数据依赖性**：预测误差和异常识别效果依赖数据快照、训练/测试划分、参数和评估方法；需在固定条件下复现实验后再用于对外汇报。
