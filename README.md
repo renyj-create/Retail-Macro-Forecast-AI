@@ -2,26 +2,26 @@
 
 ### 零售消费品智能洞察中台 · Retail & Macro Intelligence Platform
 
-一个从本科毕业论文研究思路演进而来的 Python + AI Agent 数据分析应用。
+一个面向零售消费场景的 Python + AI Agent 数据分析应用，融合宏观经济数据分析、用户流失预测、时间序列预测、异常检测、知识检索与智能报告生成。
 
-**演进路线：**
+**项目演进路线：**
 
-> **本科阶段**：R 语言零售消费数据分析与预测回测，重点验证预测效果
-> → **后续扩展**：迁移至 Python 技术体系，扩展数据处理、机器学习与时间序列预测
-> → **AI 应用**：RAG 知识检索、LangGraph 工作流编排、工具调用与结构化报告生成
+> **研究背景**：此前使用 R 语言开展《中国社会消费品零售总额确定性影响因素与预测研究》，进行社零数据分析与时间序列预测。  
+> → **Python 工程实践**：围绕宏观数据分析，扩展用户流失预测、时间序列预测、异常检测等能力。  
+> → **AI 应用开发**：引入 RAG 知识检索、LangGraph 工作流编排、工具调用与结构化报告生成，整合数据分析、模型推理与智能报告生成能力。
 
-系统融合：宏观数据分析、用户流失预测、时间序列预测、异常检测、RAG 知识检索、SQL 数据查询与 LangGraph Agent，实现从数据洞察到智能报告生成的完整流程。
+系统整体遵循「数据采集 → 特征工程 → 模型训练 → 服务化 → Agent 编排 → 可解释性 → 反馈闭环 → 可视化」的处理链路。
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Python-3.10-3776AB?logo=python&logoColor=white" alt="Python"/>
-  <img src="https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white" alt="FastAPI"/>
-  <img src="https://img.shields.io/badge/Vue-3.x-4FC08D?logo=vue.js&logoColor=white" alt="Vue"/>
-  <img src="https://img.shields.io/badge/LangGraph-Agent-FF6F00?logo=langchain&logoColor=white" alt="LangGraph"/>
-  <img src="https://img.shields.io/badge/LightGBM-SHAP-3A75BD?logo=lightgbm&logoColor=white" alt="LightGBM"/>
-  <img src="https://img.shields.io/badge/statsmodels-ARIMA-8CA1AF" alt="ARIMA"/>
-  <img src="https://img.shields.io/badge/Qwen-API-615CED?logo=alibabacloud&logoColor=white" alt="Qwen"/>
-  <img src="https://img.shields.io/badge/ChromaDB-RAG-4B5563?logo=chromadb&logoColor=white" alt="ChromaDB"/>
-  <img src="https://img.shields.io/badge/ECharts-6-AA344D?logo=apacheecharts&logoColor=white" alt="ECharts"/>
+  <img src="https://img.shields.io/badge/Python-3.10-3776AB?logo=python&logoColor=white" alt="Python" />
+  <img src="https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white" alt="FastAPI" />
+  <img src="https://img.shields.io/badge/Vue-3.x-4FC08D?logo=vue.js&logoColor=white" alt="Vue 3" />
+  <img src="https://img.shields.io/badge/LangGraph-Agent-FF6F00?logo=langchain&logoColor=white" alt="LangGraph" />
+  <img src="https://img.shields.io/badge/LightGBM-SHAP-3A75BD?logo=lightgbm&logoColor=white" alt="LightGBM and SHAP" />
+  <img src="https://img.shields.io/badge/statsmodels-ARIMA-8CA1AF" alt="ARIMA" />
+  <img src="https://img.shields.io/badge/Qwen-API-615CED?logo=alibabacloud&logoColor=white" alt="Qwen API" />
+  <img src="https://img.shields.io/badge/ChromaDB-RAG-4B5563?logo=chromadb&logoColor=white" alt="ChromaDB" />
+  <img src="https://img.shields.io/badge/ECharts-6-AA344D?logo=apacheecharts&logoColor=white" alt="ECharts" />
 </p>
 
 ---
@@ -43,63 +43,65 @@
 
 ## 1. 项目简介
 
-### 1.1 本科毕业论文与当前项目的关系
+### 1.1 研究背景与项目演进
 
-本项目起源于本科毕业论文阶段对零售消费数据的研究。两者的关系是「研究思路延续、工程实现扩展」，而非同一套实验在不同语言下的简单复刻：
+本项目的研究背景来自此前使用 R 语言开展的《中国社会消费品零售总额确定性影响因素与预测研究》。在此基础上，我使用 Python 重新构建数据处理与预测分析流程，并逐步扩展机器学习、异常检测、RAG 知识检索和 AI Agent 等功能。
 
-- **本科阶段（R 语言）**：使用 R 语言完成零售消费数据分析，并通过回测验证预测效果，重点在于验证「预测是否有效」这一研究问题。
-- **当前项目（Python）**：在迁移至 Python 技术体系后，进一步扩展了机器学习流失预测、时间序列预测、异常检测、RAG 知识检索、LangGraph 工作流编排与 AI 报告生成等能力，定位为个人工程实践与作品集项目。
+当前项目的重点不只是预测模型本身，而是将数据采集、模型推理、智能工具调用、工作流编排、报告生成与前端可视化整合为一个可运行、可演示的数据分析应用。
 
-需要明确的是：
+需要说明的是，原有 R 语言研究与当前 Python 项目属于研究思路的延续和工程能力的扩展，并非同一套代码的简单迁移。本文档中的实验指标均以当前 Python 项目的代码、数据快照和评估口径为准。
 
-- 本科论文阶段并未实现当前项目的全部功能；当前项目是在其研究思路基础上的一次独立的工程化扩展。
-- 本科论文的回测指标不应直接等同于当前 Python 项目的实验结果；本文档第 9 节所列指标均基于当前项目代码在当前数据快照上重新计算得出。
-- 本项目为可运行、可演示的工程实践项目，未在任何企业生产环境中正式部署。
+本项目定位为个人工程实践与作品集项目，尚未在企业生产环境中正式部署。
 
 ### 1.2 项目定位
 
-**Retail-Macro-Forecast-AI** 是一个面向零售消费场景的数据智能演示平台，将「宏观研判」与「微观用户运营」组织到同一系统中：
+**Retail-Macro-Forecast-AI** 是一个面向零售消费场景的数据智能演示平台，将宏观研判与微观用户运营组织到同一系统中：
 
-- **宏观侧**：通过 AKShare 采集国家统计局「社会消费品零售总额」数据，用 ARIMA 做未来 3 个月预测，用 IsolationForest 识别异常月份。
-- **微观侧**：基于 RFM 特征训练 LightGBM 用户流失预测模型，并在训练脚本中用 SHAP 计算特征归因。
-- **智能侧**：以 LangGraph 编排 AI Agent，将模型与查询能力封装为本地工具，通过 Qwen 大模型完成意图识别与自然语言报告生成；内置基于 ChromaDB 的本地向量检索，支持政策/研报文本的 RAG 检索。
-- **展示侧**：Vue3 + Element Plus + ECharts 打造数据看板，支持预测置信区间可视化、异常点标注、回测指标展示，以及 Agent 执行明细（SQL / RAG 原文）的可追溯展示。
-- **闭环侧**：支持用户对 AI 报告点赞/点踩反馈，并配套「报告反馈管理」后台，进行分页查询、筛选与点赞率统计。
+- **宏观侧**：通过 AKShare 获取国家统计局社会消费品零售总额数据，使用 ARIMA 预测未来 3 个月走势，并通过 IsolationForest 识别异常月份。
+- **微观侧**：基于 RFM 特征训练 LightGBM 用户流失预测模型，并通过 SHAP 分析特征对模型预测的贡献。
+- **智能侧**：以 LangGraph 编排 AI Agent，将模型与查询能力封装为本地工具，通过 Qwen 大模型完成意图识别与自然语言报告生成；内置基于 ChromaDB 的本地知识检索能力，支持对政策与研报示例文本进行 RAG 检索。
+- **展示侧**：使用 Vue 3、Element Plus 与 ECharts 构建数据看板，展示预测结果、置信区间、异常点、回测指标，以及 Agent 执行明细（SQL、RAG 原文等）。
+- **反馈侧**：支持 AI 报告点赞与点踩，反馈数据持久化至 SQLite，并通过管理后台进行分页查询、条件筛选与点赞率统计。
 
-系统整体遵循「数据采集 → 特征工程 → 模型训练 → 服务化 → Agent 编排 → 可解释性 → 反馈闭环 → 可视化」的链路。
-
-> **⚠️ 数据口径声明**：宏观社零数据来自公开统计源（国家统计局）；微观用户/交易数据为基于 RFM 规则生成的模拟数据，不代表真实企业客户；知识库 `docs/policy.txt` 为自撰的示例研报文本，并非真实企业政策文件。演示结果用于验证分析流程，不应直接作为真实经营决策依据。
+> **数据口径声明**：宏观社零数据来自公开统计源（国家统计局）；微观用户与交易数据为基于 RFM 规则生成的模拟数据，不代表真实企业客户；知识库 `docs/policy.txt` 为自撰的示例研报文本，并非真实企业政策文件。演示结果用于验证分析流程，不应直接作为真实经营决策依据。
 
 ---
 
 ## 2. 核心亮点
 
 ### 2.1 数据口径透明化
-- 宏观数据来自国家统计局真实数据（AKShare 采集），时间范围 2008-01 至 2026-08。
-- 微观用户/交易数据基于 RFM 规则模拟生成（生成阶段向约 30% 用户注入流失行为，最终流失标签占比约 16%）。
-- 前端显式标注数据来源，区分「真实宏观数据」与「模拟用户数据」。
+
+- 宏观数据通过 AKShare 采集，当前文档对应的数据快照时间范围为 2008-01 至 2026-08。
+- 微观用户与交易数据基于 RFM 规则模拟生成，生成阶段向约 30% 用户注入流失行为，最终流失标签占比约 16%。
+- 前端显式标注数据来源，区分真实宏观数据与模拟用户数据。
 
 ### 2.2 轻量 RAG（中文检索工程落地）
-- 使用 ChromaDB 本地持久化向量库，无需重型 Embedding 模型。
-- 针对中文场景采用**字符级 n-gram (2,3) TF-IDF** 分词方案，离线可用、无额外依赖。
-- 对未命中场景明确返回「未在知识库中找到相关研报」，拒绝编造。
+
+- 使用 ChromaDB 本地持久化向量库。
+- 针对中文场景采用**字符级 n-gram（2、3）TF-IDF** 表示文本，无需额外依赖中文分词器或稠密 Embedding 模型。
+- 对未命中场景明确返回“未在知识库中找到相关研报”，避免在没有检索依据时编造知识库内容。
 
 ### 2.3 可解释性与防幻觉
-- 通过 System Prompt 约束大模型输出**六段式结构**：【核心结论】、【数据依据】、【趋势与预测分析】、【异常与风险】、【建议的下一步分析】、【结果限制与不确定性】。
-- 约束模型只允许使用工具真实返回的数据，缺失数据须输出「暂无数据」，严禁自行计算或编造。
-- 前端提供「执行明细」面板，可追溯意图识别结果、实际调用的工具、原始 SQL、ChromaDB 原文片段与来源、以及报告是否为大模型生成还是模板降级。
+
+- 通过 System Prompt 约束大模型输出六段式结构：【核心结论】、【数据依据】、【趋势与预测分析】、【异常与风险】、【建议的下一步分析】、【结果限制与不确定性】。
+- 约束模型依据工具实际返回的数据作答，缺失数据须输出“暂无数据”，不允许将模型自行推断的数值伪装成真实查询结果。
+- 前端提供“执行明细”面板，可追溯意图识别结果、实际调用的工具、原始 SQL、ChromaDB 原文片段与来源，以及报告是由大模型生成还是由模板降级生成。
 
 ### 2.4 异常降级与状态透传
-- 各工具与 API 均实现 `try/except` 降级，模型或依赖不可用时返回可读错误而非进程崩溃。
-- 大模型调用失败时自动切换至模板兜底报告，并在前端标注「AI 服务降级」状态。
-- 后端返回 `generation_status`（success / fallback / failed），如实反映生成状态。
+
+- 工具与 API 对常见异常进行捕获和处理，模型或依赖不可用时尽量返回可读错误信息，而非直接导致进程崩溃。
+- 大模型调用失败时自动切换至模板兜底报告，并在前端标注“AI 服务降级”状态。
+- 后端通过 `generation_status`（`success` / `fallback` / `failed`）返回生成状态。
 
 ### 2.5 反馈闭环
-- AI 报告支持点赞/点踩反馈，反馈持久化至 SQLite，配套「报告反馈管理」后台（分页、筛选、点赞率统计）。
+
+- AI 报告支持点赞与点踩反馈，反馈数据持久化至 SQLite。
+- 提供“报告反馈管理”后台，支持分页、筛选及点赞率统计，为后续 Prompt 调整提供参考。
 
 ### 2.6 工程严谨性
-- 数据库表采用 `CREATE TABLE IF NOT EXISTS` 幂等建表。
-- 接口层提供统一异常处理与参数校验（非法参数 400、限流 429 等）。
+
+- 数据库表采用 `CREATE TABLE IF NOT EXISTS`，支持幂等建表。
+- 接口层提供参数校验与统一异常处理；非法参数返回 400，触发限流时返回 429。
 
 ---
 
@@ -118,7 +120,7 @@ flowchart TB
 
     subgraph Model["② 模型层"]
         B1["LightGBM<br/>用户流失预测"]
-        B2["SHAP<br/>特征归因（训练脚本）"]
+        B2["SHAP<br/>特征归因（训练与推理）"]
         B3["ARIMA(1,1,1)<br/>时序预测 + 95% CI"]
         B4["IsolationForest<br/>异常检测"]
         B5["scipy.stats<br/>A/B 检验"]
@@ -137,12 +139,12 @@ flowchart TB
     end
 
     subgraph Serve["④ 服务层"]
-        D1["FastAPI<br/>RESTful 接口"]
+        D1["FastAPI<br/>REST API"]
     end
 
     subgraph Front["⑤ 展示层"]
-        E1["Vue3 + Element Plus"]
-        E2["ECharts<br/>预测/置信区间/异常点"]
+        E1["Vue 3 + Element Plus"]
+        E2["ECharts<br/>预测 / 置信区间 / 异常点"]
         E3["反馈管理后台"]
         E1 --> E2
         E1 --> E3
@@ -158,19 +160,19 @@ flowchart TB
 ## 4. 功能矩阵
 
 | 功能模块 | 技术实现 | 关键输出 |
-|---------|---------|---------|
-| 宏观数据采集 | AKShare + SQLAlchemy | 2008-01 至 2026-08 月度社零数据 |
-| 特征工程 | Pandas + 类别编码 | RFM 特征、城市等级 one-hot |
-| 用户流失预测 | LightGBM + 类别不平衡处理 | 批量流失概率 + 风险分布（真实推理接口） |
-| 可解释性 | SHAP TreeExplainer | 特征归因（推理接口实时返回，前端图表展示） |
-| 时间序列预测 | statsmodels ARIMA(1,1,1) | 未来 3 个月预测 + 95% 置信区间 |
+|---|---|---|
+| 宏观数据采集 | AKShare + SQLAlchemy | 2008-01 至 2026-08 月度社零数据（以当前数据快照为准） |
+| 特征工程 | Pandas + 类别编码 | RFM 特征、城市等级 one-hot 特征 |
+| 用户流失预测 | LightGBM + 类别不平衡处理 | 批量流失概率、风险分布与高风险用户（真实模型推理接口，输入数据为模拟数据） |
+| 可解释性 | SHAP TreeExplainer | 特征归因（推理接口可返回，前端图表展示） |
+| 时间序列预测 | statsmodels ARIMA(1,1,1) | 未来 3 个月预测与 95% 置信区间 |
 | 历史回测 | 最后 3 期留出评估 | MAE / RMSE / MAPE |
-| 异常检测 | sklearn IsolationForest（contamination=0.05） | 异常月份标记 |
-| A/B 测试 | scipy Levene + t 检验 | Uplift、显著性结论 |
-| RAG 知识库 | ChromaDB + 字符级 n-gram | 文本检索、未命中明确提示 |
-| AI Agent | LangGraph + 本地工具 + Qwen | 意图路由 + 结构化报告 + 执行明细 |
-| 反馈闭环 | SQLite + FastAPI + Vue3 | 点赞/点踩持久化、点赞率统计、分页管理 |
-| 前端看板 | Vue3 + Element Plus + ECharts | 预测置信区间图、异常散点、执行明细面板 |
+| 异常检测 | sklearn IsolationForest（`contamination=0.05`） | 异常月份标记 |
+| A/B 测试 | scipy Levene + t 检验 | Uplift、显著性检验结果 |
+| RAG 知识库 | ChromaDB + 字符级 n-gram TF-IDF | 文本检索、未命中提示 |
+| AI Agent | LangGraph + 本地工具 + Qwen | 意图路由、结构化报告、执行明细 |
+| 反馈闭环 | SQLite + FastAPI + Vue 3 | 点赞/点踩持久化、点赞率统计、分页管理 |
+| 前端看板 | Vue 3 + Element Plus + ECharts | 预测置信区间图、异常散点、执行明细面板 |
 
 ---
 
@@ -178,20 +180,26 @@ flowchart TB
 
 系统将数据查询、预测模型与知识检索能力封装为**本地 Agent 工具**（普通 Python 函数），供 LangGraph 工作流统一调用。
 
-> **关于「MCP」的准确说明**：工具类命名为 `MCPToolServer`，但其实现是**在进程内直接调用的普通 Python 方法**，并未使用 MCP（Model Context Protocol）协议，也没有独立的 MCP Server / JSON-RPC 通信。命名上借鉴了 MCP 的「工具封装」思想，功能上等价于本地函数工具，请勿理解为本项目已接入 MCP 协议。
+> **关于 MCP 的准确说明**：工具类命名为 `MCPToolServer`，但其实现是在进程内直接调用的普通 Python 方法，并未使用 MCP（Model Context Protocol）协议，也没有独立的 MCP Server 或 JSON-RPC 通信。命名上借鉴了工具封装的思路，不代表本项目已接入 MCP 协议。
 
 | 工具方法 | 能力 | 输入 | 输出 |
-|---------|------|------|------|
-| `query_macro_sqlite()` | SQL 查询宏观社零数据 | limit（默认 12） | 最近 N 期社零额与同比增速 + 趋势摘要 |
-| `forecast_timeseries()` | ARIMA 时序预测 + 异常检测 | — | 未来 3 个月预测 + 置信区间 + 回测 MAPE + 异常月份 |
-| `predict_churn_batch()` | 用户流失批量推理（真实模型） | top_n | 风险分布 + 高风险用户 + SHAP 特征归因 |
+|---|---|---|---|
+| `query_macro_sqlite()` | SQL 查询宏观社零数据 | `limit`（默认 12） | 最近 N 期社零额与同比增速、趋势摘要 |
+| `forecast_timeseries()` | ARIMA 时序预测与异常检测 | 无 | 未来 3 个月预测、置信区间、回测 MAPE、异常月份 |
+| `predict_churn_batch()` | 用户流失批量推理（真实模型） | `top_n` | 风险分布、高风险用户、SHAP 特征归因 |
 | `predict_churn_lightgbm()` | 单用户流失预测（示例） | RFM + 城市等级特征 | 流失概率 |
-| `evaluate_ab_test(control, treatment)` | A/B 检验 | 两组样本 | Levene + t 检验 + Uplift 报告 |
-| `rag_search(query)` | 知识库检索 | 自然语言问题 | 知识库原文片段 + 来源 |
+| `evaluate_ab_test(control, treatment)` | A/B 检验 | 两组样本 | Levene 检验、t 检验与 Uplift 报告 |
+| `rag_search(query)` | 知识库检索 | 自然语言问题 | 知识库原文片段与来源 |
 
-> 工作流按意图路由调用上述工具：**宏观分析** → `query_macro_sqlite` + `forecast_timeseries`；**流失预测** → `predict_churn_batch`；**综合分析** → 三者组合。`evaluate_ab_test` 当前可用但未接入工作流。
->
-> 所有工具均实现**异常捕获与优雅降级**：模型或依赖不可用时返回可读的错误信息，而非进程崩溃，保障 Agent 主链路稳定。每个工具调用都会写入统一执行记录（工具名 / 输入 / 状态 / 耗时 / 错误 / 摘要），供前端执行明细面板展示。
+工作流按意图路由调用工具：
+
+- **宏观分析**：调用 `query_macro_sqlite` 与 `forecast_timeseries`。
+- **流失预测**：调用 `predict_churn_batch`。
+- **综合分析**：组合调用宏观查询、预测及流失分析工具。
+- `evaluate_ab_test` 当前可独立使用，但尚未接入主工作流。
+- `rag_search` 提供知识库检索能力；是否在一次分析中执行取决于工作流路由。
+
+所有工具均包含异常捕获与降级处理。模型或依赖不可用时，工具尽量返回可读的错误信息，而非让 Agent 主链路直接崩溃。每次工具调用都会写入统一执行记录，包括工具名、输入、状态、耗时、错误信息与摘要，供前端执行明细面板展示。
 
 ---
 
@@ -199,18 +207,17 @@ flowchart TB
 
 ### 6.1 环境准备
 
+推荐使用 Python 3.10，并通过 Conda 创建独立环境：
+
 ```bash
-# 1. 创建并激活虚拟环境（推荐 Python 3.10）
 conda create -n retail_env python=3.10 -y
 conda activate retail_env
-
-# 2. 安装后端依赖
 pip install -r requirements.txt
 ```
 
 ### 6.2 生成数据与训练模型（首次运行）
 
-仓库不提交数据、数据库与模型文件（均已在 `.gitignore` 中），首次运行需按顺序执行：
+仓库不提交数据、数据库与模型文件（均配置在 `.gitignore` 中）。首次运行时，按顺序执行：
 
 ```bash
 # 1. 采集宏观社零数据（写入 data/raw/*.csv 与 retail.db）
@@ -219,7 +226,7 @@ python src/data_pipeline/fetch_macro.py
 # 2. 生成模拟用户/交易数据并构建流失数据集
 python src/data_pipeline/generate_mock_data.py
 
-# 3. 训练并保存 LightGBM 流失预测模型（保存至 src/models/saved_models/）
+# 3. 训练并保存 LightGBM 流失预测模型
 python src/models/train_lgbm_churn.py
 ```
 
@@ -227,66 +234,70 @@ python src/models/train_lgbm_churn.py
 
 ### 6.3 配置环境变量
 
-在项目根目录创建 `.env`（已包含在 `.gitignore` 中，不会提交到仓库）：
+在项目根目录创建 `.env` 文件（已加入 `.gitignore`，不应提交 API Key）：
 
 ```ini
 DASHSCOPE_API_KEY=sk-xxxxxxxxxxxxxxxx
 QWEN_MODEL=qwen3.7-flash
 ```
 
-- `DASHSCOPE_API_KEY`：阿里云百炼（DashScope）API Key，必填。
-- `QWEN_MODEL`：模型名，代码默认值为 `qwen3.7-flash`；仓库实际 `.env` 固定为快照版本 `qwen3.7-flash-2026-07-15`。
+- `DASHSCOPE_API_KEY`：阿里云百炼（DashScope）API Key。
+- `QWEN_MODEL`：指定调用的模型名称。代码默认值为 `qwen3.7-flash`；原开发环境中使用过快照版本 `qwen3.7-flash-2026-07-15`，具体可用模型名称以当前服务端配置为准。
 - 后端通过 OpenAI 兼容端点 `https://dashscope.aliyuncs.com/compatible-mode/v1` 调用 Qwen。
+
+请根据当前账号权限和可用模型配置填写真实 API Key。不要将包含密钥的 `.env` 文件提交到公开仓库。
 
 ### 6.4 启动后端（FastAPI）
 
+在项目根目录执行：
+
 ```bash
-# 在项目根目录执行
 uvicorn src.api.main:app --host 127.0.0.1 --port 8003 --reload
 ```
 
-启动成功后访问：
+启动后可访问：
 
 - Swagger 文档：<http://127.0.0.1:8003/docs>
 - 健康检查：<http://127.0.0.1:8003/health>
 
-### 6.5 启动前端（Vue3）
+### 6.5 启动前端（Vue 3）
 
 ```bash
 cd retail-frontend
-npm install          # 首次运行
-npm run dev          # 开发模式，默认 http://localhost:5173
+npm install
+npm run dev
 ```
 
-打开浏览器访问前端页面，可查看「数据总览」、「用户流失预警」、「智能问数 Agent」与「报告反馈管理」四大模块。
+开发服务器默认地址为 <http://localhost:5173>。打开页面后，可查看“数据总览”“用户流失预警”“智能问数 Agent”与“报告反馈管理”等模块。
 
 ### 6.6 运行测试
 
+在项目根目录、已激活 `retail_env` 环境的情况下执行：
+
 ```bash
-# 在项目根目录执行（使用 conda 环境 retail_env）
 python -m unittest discover -s src/tests -v
 ```
 
-测试覆盖：意图路由、工具执行、报告降级、六段式解析、LangGraph 路由与执行追踪、FastAPI 集成接口（`/forecast`、`/churn/predict`、`/churn/recall`、`/analyze`、`/overview`）。测试通过将 `graph_workflow.client` 置空强制走规则降级 + 模板兜底，不依赖外部大模型 API。
+测试覆盖意图路由、工具执行、报告降级、六段式解析、LangGraph 路由与执行追踪，以及 FastAPI 集成接口（包括 `/forecast`、`/churn/predict`、`/churn/recall`、`/analyze`、`/overview` 等）。测试通过将 `graph_workflow.client` 置空强制走规则降级与模板兜底，不依赖外部大模型 API。
 
 ---
 
 ## 7. API 接口一览
 
 | 方法 | 路径 | 说明 |
-|------|------|------|
+|---|---|---|
 | `GET` | `/` | 服务欢迎信息 |
 | `GET` | `/health` | 健康检查 |
-| `POST` | `/api/v1/analyze` | 自然语言问数（意图路由 + 真实工具 + 六段式报告 + 执行追踪 + 图表数据，限流 5 次/分钟/IP） |
-| `GET` | `/api/v1/forecast` | 社零总额 ARIMA 预测（供前端 ECharts 使用） |
-| `GET` | `/api/v1/churn/predict` | 用户流失批量推理（风险分布 / 高风险用户 / SHAP 特征归因） |
-| `POST` | `/api/v1/churn/recall` | 创建批量召回任务（持久化至 recall_tasks 表） |
-| `GET` | `/api/v1/overview` | 数据总览真实指标（最新社零 / 流失标签占比 / 回测指标） |
-| `POST` | `/api/v1/feedback` | 提交用户反馈（up/down），持久化至 SQLite |
-| `GET` | `/api/v1/feedback` | 分页查询反馈记录（支持筛选） |
-| `GET` | `/api/v1/feedback/stats` | 反馈统计（总数/点赞/点踩/点赞率） |
+| `POST` | `/api/v1/analyze` | 自然语言问数：意图路由、工具调用、六段式报告、执行追踪与图表数据；限流 5 次/分钟/IP |
+| `GET` | `/api/v1/forecast` | 社零总额 ARIMA 预测，供前端 ECharts 使用 |
+| `GET` | `/api/v1/churn/predict` | 用户流失批量推理：风险分布、高风险用户与 SHAP 特征归因 |
+| `POST` | `/api/v1/churn/recall` | 创建批量召回任务，持久化至 `recall_tasks` 表 |
+| `GET` | `/api/v1/overview` | 返回最新社零数据、流失标签占比与回测指标等总览数据 |
+| `POST` | `/api/v1/feedback` | 提交点赞/点踩反馈并持久化至 SQLite |
+| `GET` | `/api/v1/feedback` | 分页查询反馈记录，支持筛选 |
+| `GET` | `/api/v1/feedback/stats` | 查询反馈总数、点赞数、点踩数与点赞率 |
 
-`/api/v1/forecast` 响应示例（节选）：
+### `/api/v1/forecast` 响应示例（节选）
 
 ```json
 {
@@ -296,18 +307,22 @@ python -m unittest discover -s src/tests -v
   "forecast_values": [40233.6, 40448.8, 40562.0],
   "lower_bound": [35956.6, 35213.0, 34819.2],
   "upper_bound": [44510.6, 45684.7, 46304.9],
-  "metrics": { "mae": 1752.75, "rmse": 1792.03, "mape": 4.36 },
+  "metrics": {
+    "mae": 1752.75,
+    "rmse": 1792.03,
+    "mape": 4.36
+  },
   "anomalies": [
-    { "date": "2020-03", "value": 26449.9 },
-    { "date": "2022-04", "value": 29483.1 },
+    {"date": "2020-03", "value": 26449.9},
+    {"date": "2022-04", "value": 29483.1},
     "... 共 10 个异常月份（此处节选 2 个）"
   ]
 }
 ```
 
-> 上述数值为当前数据快照下、`ARIMA(1,1,1)` 以最后 3 个月作为留出回测窗口计算得到的结果；不同数据快照下数值会变化，见第 9 节。
+以上数值为原始开发数据快照下，ARIMA(1,1,1) 以最后 3 个月作为留出回测窗口得到的示例结果。数据更新或实验配置变化后，结果可能发生变化；对外展示前应在当前环境中重新运行并核验。
 
-`/api/v1/analyze` 响应示例（节选，展示结构化执行链路）：
+### `/api/v1/analyze` 响应示例（节选）
 
 ```json
 {
@@ -317,31 +332,60 @@ python -m unittest discover -s src/tests -v
   "generation_status": "success",
   "fallback_reason": "",
   "sections": [
-    { "title": "【核心结论】", "content": "…" },
-    { "title": "【数据依据】", "content": "…" }
+    {"title": "【核心结论】", "content": "…"},
+    {"title": "【数据依据】", "content": "…"}
   ],
   "execution": [
-    { "name": "intent_recognition", "status": "success", "summary": "识别意图为「综合分析」", "duration_ms": 812.3 },
-    { "name": "query_macro_sqlite", "status": "success", "sql": "SELECT date, …", "duration_ms": 1.5 },
-    { "name": "forecast_timeseries", "status": "success", "summary": "回测 MAPE=4.36%", "duration_ms": 210.4 },
-    { "name": "predict_churn_batch", "status": "success", "summary": "共对 4766 名模拟用户执行流失预测", "duration_ms": 1348.0 },
-    { "name": "report_generation", "status": "success", "summary": "大模型生成报告" }
+    {
+      "name": "intent_recognition",
+      "status": "success",
+      "summary": "识别意图为「综合分析」",
+      "duration_ms": 812.3
+    },
+    {
+      "name": "query_macro_sqlite",
+      "status": "success",
+      "sql": "SELECT date, …",
+      "duration_ms": 1.5
+    },
+    {
+      "name": "forecast_timeseries",
+      "status": "success",
+      "summary": "回测 MAPE=4.36%",
+      "duration_ms": 210.4
+    },
+    {
+      "name": "predict_churn_batch",
+      "status": "success",
+      "summary": "共对 4766 名模拟用户执行流失预测",
+      "duration_ms": 1348.0
+    },
+    {
+      "name": "report_generation",
+      "status": "success",
+      "summary": "大模型生成报告"
+    }
   ],
   "data": {
-    "macro": [{ "date": "2026-08", "value": 39824.4, "yoy": 0.4 }],
-    "forecast": { "historical_dates": [], "forecast_values": [], "anomalies": [] },
-    "churn": { "risk_distribution": [], "feature_importance": [], "top_risk_users": [] }
+    "macro": [{"date": "2026-08", "value": 39824.4, "yoy": 0.4}],
+    "forecast": {"historical_dates": [], "forecast_values": [], "anomalies": []},
+    "churn": {"risk_distribution": [], "feature_importance": [], "top_risk_users": []}
   }
 }
 ```
 
-`/api/v1/feedback/stats` 响应示例：
+### `/api/v1/feedback/stats` 响应示例
 
 ```json
 {
   "status": "ok",
   "message": "查询成功",
-  "data": { "total": 3, "up_count": 2, "down_count": 1, "up_rate": 0.6667 }
+  "data": {
+    "total": 3,
+    "up_count": 2,
+    "down_count": 1,
+    "up_rate": 0.6667
+  }
 }
 ```
 
@@ -349,117 +393,126 @@ python -m unittest discover -s src/tests -v
 
 ## 8. 项目结构
 
-```
+```text
 retail_insight_platform/
 ├── src/
-│   ├── data_pipeline/              # 数据采集与模拟数据生成
-│   │   ├── fetch_macro.py          # AKShare 采集宏观社零数据
-│   │   └── generate_mock_data.py   # 模拟用户/交易数据 + RFM 特征 + 流失标签
-│   ├── models/                     # 模型训练与推理
-│   │   ├── train_lgbm_churn.py     # LightGBM 流失预测 + SHAP（训练）
-│   │   ├── churn_inference.py      # LightGBM 批量推理 + SHAP 归因（服务化）
-│   │   └── train_timeseries.py     # ARIMA 预测 + 异常检测 + 回测
-│   ├── agents/                     # AI Agent 编排
-│   │   ├── tools.py                # 本地工具封装（类名 MCPToolServer，非 MCP 协议）
-│   │   └── graph_workflow.py       # LangGraph 工作流
-│   ├── tests/                      # 单元与集成测试
-│   │   ├── test_agent.py           # 工具 / 意图 / 兜底 / 解析测试
-│   │   ├── test_workflow.py        # LangGraph 路由与执行追踪测试
-│   │   └── test_api.py             # FastAPI 集成测试
+│   ├── data_pipeline/               # 数据采集与模拟数据生成
+│   │   ├── fetch_macro.py           # AKShare 采集宏观社零数据
+│   │   └── generate_mock_data.py    # 模拟用户/交易数据、RFM 特征与流失标签
+│   ├── models/                      # 模型训练与推理
+│   │   ├── train_lgbm_churn.py      # LightGBM 流失预测训练与 SHAP 分析
+│   │   ├── churn_inference.py       # LightGBM 批量推理与 SHAP 归因
+│   │   └── train_timeseries.py      # ARIMA 预测、异常检测与回测
+│   ├── agents/                      # AI Agent 编排
+│   │   ├── tools.py                 # 本地工具封装（MCPToolServer 类名，非 MCP 协议）
+│   │   └── graph_workflow.py        # LangGraph 工作流
+│   ├── tests/                       # 单元与集成测试
+│   │   ├── test_agent.py            # 工具、意图、兜底与报告解析测试
+│   │   ├── test_workflow.py         # LangGraph 路由与执行追踪测试
+│   │   └── test_api.py              # FastAPI 集成测试
 │   └── api/
-│       └── main.py                 # FastAPI 接口
+│       └── main.py                  # FastAPI 接口
 ├── docs/
-│   └── policy.txt                  # RAG 知识库示例研报文本
-├── retail-frontend/                # Vue3 前端
-│   └── src/App.vue                 # 数据总览 / 流失预警 / 智能问数 / 反馈管理
+│   └── policy.txt                   # RAG 知识库示例研报文本
+├── retail-frontend/                 # Vue 3 前端
+│   └── src/App.vue                  # 数据总览、流失预警、智能问数、反馈管理
 ├── requirements.txt
-└── .env                            # 环境变量（不入库）
+└── .env                             # 本地环境变量，不应提交到 Git
 ```
 
-以下目录/文件为**运行脚本后生成**，不提交到 Git（已在 `.gitignore` 中）：
+以下目录或文件为运行脚本后生成，不提交到 Git（已配置在 `.gitignore` 中）：
 
-```
+```text
 retail_insight_platform/
-├── data/                           # 采集与生成的 CSV 数据
-│   ├── raw/                        # macro_retail_sales.csv / transactions.csv / users_info.csv
-│   └── processed/                  # churn_dataset.csv
-├── src/models/saved_models/        # 训练好的 LightGBM 模型（lgbm_churn_model.pkl）
-├── retail.db                       # SQLite 数据库
-└── chroma_db/                      # ChromaDB 向量库（首次 RAG 检索时生成）
+├── data/                             # 采集与生成的 CSV 数据
+│   ├── raw/                          # macro_retail_sales.csv / transactions.csv / users_info.csv
+│   └── processed/                    # churn_dataset.csv
+├── src/models/saved_models/          # 训练好的 LightGBM 模型文件
+├── retail.db                         # SQLite 数据库
+└── chroma_db/                        # ChromaDB 本地向量库
 ```
 
 ---
 
 ## 9. 技术设计与实验结果
 
-> 本节聚焦「实际问题 → 技术选择 → 验证方法 → 当前局限」。除特别说明外，指标均在当前数据快照（宏观数据截至 2026-08）下、按代码默认参数重新计算得到。
+本节聚焦“实际问题 → 技术选择 → 验证方法 → 当前局限”。除特别说明外，以下结果对应开发时使用的数据快照（宏观数据截至 2026-08）和代码默认参数。重新采集数据、调整代码或改变实验划分后，指标可能变化。
 
 ### 9.1 时序预测与回测的实验条件
 
-- **实际问题**：社零总额呈明显上涨趋势与季节性，直接预测易被趋势主导。
-- **技术选择**：采用 `statsmodels` ARIMA(1,1,1)，以最后 3 个月作为留出回测窗口（用前 N-3 期训练、预测最后 3 期并与真实值对比）。
-- **验证结果**（当前快照下复现）：
+- **实际问题**：社零总额具有长期趋势和季节性，直接预测容易受到趋势影响。
+- **技术选择**：采用 `statsmodels` 的 ARIMA(1,1,1)，以最后 3 个月作为留出回测窗口，用此前数据拟合模型后预测这 3 期，并与实际值对比。
+- **验证结果**（当前开发快照下的记录）：
 
 | 指标 | 数值 | 计算口径 |
-|------|------|---------|
-| MAE | 1752.75 亿元 | 留出 3 期预测值与真实值的平均绝对误差 |
+|---|---:|---|
+| MAE | 1752.75 亿元 | 留出 3 期预测值与实际值的平均绝对误差 |
 | RMSE | 1792.03 亿元 | 留出 3 期的均方根误差 |
 | MAPE | 4.36% | 留出 3 期的平均绝对百分比误差 |
 
-- **当前局限**：回测仅覆盖 3 期留出窗口，样本量小，指标对数据快照与划分方式敏感；需在固定条件下复现后再用于对外汇报。
+- **当前局限**：回测只覆盖 3 期，样本量较小，指标对数据快照与划分方式敏感；对外汇报前应在固定条件下重新复现。
 
-### 9.2 特征选择：为什么用「同比增长率」做异常检测
+### 9.2 特征选择：为什么用同比增长率做异常检测
 
-- **实际问题**：直接对 18 年社零原始值做异常检测，会被长期上涨趋势主导，容易把 2008~2009 年低基数期误判为异常。
-- **技术选择**：改用 `yoy_growth`（同比增速）作为检测特征。同比是同月对比，可消除趋势与季节性，将检测聚焦在「偏离正常增速」上。
-- **验证结果**：IsolationForest（`contamination=0.05`、`random_state=42`、特征 `yoy_growth`）共标记 10 个异常月份，包括 2020-03/04/05（疫情）、2022-03/04/05/11（封控）与 2008-06/07（金融危机期间）等；另有 2021-03 等月份，其异常归属建议结合宏观事件人工复核，不直接等同于「精准命中」。
-- **当前局限**：`contamination` 为人工设定的比例参数（5%），异常数量随该参数变化；缺乏真实异常标签，无法给出可验证的「误判率」类指标。
+- **实际问题**：直接对多年社零原始值进行异常检测，可能被长期上涨趋势主导，导致模型将早期低基数时期识别为异常。
+- **技术选择**：使用 `yoy_growth`（同比增速）作为检测特征。同比以相同月份进行比较，有助于减弱趋势和季节性影响，使检测更聚焦于增速偏离。
+- **验证结果**：IsolationForest 使用 `contamination=0.05`、`random_state=42`，基于 `yoy_growth` 标记了 10 个异常月份。开发时的记录包括 2020-03/04/05、2022-03/04/05/11 和 2008-06/07 等月份；异常归属仍需结合宏观事件人工复核，不应直接视为精准命中。
+- **当前局限**：`contamination` 是人为设置的比例参数，异常数量会随参数变化；由于缺少真实异常标签，目前无法计算可验证的误判率或召回率。
 
-### 9.3 成本权衡：ARIMA vs 复杂模型
+### 9.3 成本权衡：ARIMA 与复杂模型
 
 | 维度 | ARIMA(1,1,1) | LSTM / Prophet |
-|------|-------------|----------------|
-| 训练成本 | 毫秒级，单机即可 | 需要 GPU / 较长时间 |
-| 可解释性 | 参数透明，置信区间解析解 | 黑盒，区间需近似 |
-| 数据需求 | 数十个样本即可 | 需要大量样本 |
-| 适用场景 | 宏观月度数据、少样本 | 高频、复杂非线性 |
+|---|---|---|
+| 训练与运行成本 | 当前任务下计算开销较低，普通 CPU 可运行 | 取决于模型配置、数据量与训练方式，通常有更高的调参成本 |
+| 可解释性 | 统计建模假设和参数相对明确 | 解释复杂度通常更高 |
+| 数据需求 | 可用于中小规模单变量时间序列，但效果依赖序列特性 | 对数据量、特征质量和调参更敏感，具体取决于方法 |
+| 适用场景 | 可作为宏观月度数据的基线模型 | 可在存在足够数据、复杂模式或额外特征时进行对比实验 |
+
+本项目使用 ARIMA 主要是为了构建轻量、可运行的预测示例，并不意味着它在所有场景下都优于其他时间序列模型。
 
 ### 9.4 RAG 工程落地：轻量中文检索方案
 
-- **问题 1**：`TfidfVectorizer` 默认按空格分词，对中文无效（相似度全为 0）。
-- **决策 1**：采用**字符级 n-gram (2,3)**，无需引入 `jieba` 等额外依赖，离线可用。
-- **问题 2**：语料/分词变化会导致 ChromaDB 向量维度不一致。
-- **决策 2**：每次调用采用「先删后建」写入集合，规避维度冲突。
-- **当前局限**：字符级 TF-IDF 非稠密语义 Embedding，对同义改写与复杂语义的召回能力有限；每次重建集合适合小规模演示，不适合大语料高并发。
+- **问题 1**：`TfidfVectorizer` 默认按空格切分词语，直接用于中文文本时，可能无法形成理想的词项表示，导致检索效果不佳。
+- **决策 1**：采用字符级 n-gram（2、3），不依赖额外中文分词器，可离线运行。
+- **问题 2**：如果语料、向量化配置或特征维度发生变化，旧集合中的向量可能无法与新向量兼容。
+- **决策 2**：当前实现采用先删除再重建集合的方式规避维度冲突。
+- **当前局限**：字符级 TF-IDF 不是稠密语义 Embedding，对同义改写和复杂语义的召回能力有限；每次重建集合适合小规模演示，不适合大语料或高并发场景。
 
 ### 9.5 用户流失预测的实验条件
 
-- **技术选择**：基于 RFM 特征与城市等级 one-hot 特征训练 LightGBM，使用 `scale_pos_weight` 处理类别不平衡。
-- **验证结果**：模拟数据流失标签占比约 15.95%；训练脚本在 `random_state=42` 的 20% 测试集上评估（AUC 约 0.82、KS 约 0.56）。这些指标由训练脚本打印输出，未通过 API 或前端动态展示。
-- **当前局限**：流失标签为规则生成（非真实业务流失），模型在默认 0.5 阈值下分类 F1≈0（模型偏向概率排序而非硬分类）。因此风险等级不再使用绝对概率阈值，而是基于当前样本概率分位数（P50/P80/P95）划分四档，实际落地仍需结合业务做阈值调优。前端「用户流失预警」页与「智能问数」中的流失预测工具均已接入真实批量推理接口（`/api/v1/churn/predict`）。
+- **技术选择**：基于 RFM 特征与城市等级 one-hot 特征训练 LightGBM，并使用 `scale_pos_weight` 处理类别不平衡。
+- **验证结果**：模拟数据的流失标签占比约为 15.95%；训练脚本在 `random_state=42` 的 20% 测试集上记录的 AUC 约为 0.82、KS 约为 0.56。这些指标由训练脚本输出，不是由 API 或前端动态计算。
+- **当前局限**：流失标签由规则生成，并非真实业务流失标签。开发记录中模型在默认 0.5 阈值下的分类 F1 约为 0，说明模型概率排序能力与固定阈值下的分类效果并不等价。当前风险等级基于当前样本的概率分位数（P50/P80/P95）划分，实际落地时仍需使用真实业务标签、业务成本及运营反馈进行阈值调优。
+- **接口状态**：前端用户流失预警页与智能问数中的流失预测工具已接入批量推理接口 `/api/v1/churn/predict`；数据仍为 RFM 模拟数据。
 
 ### 9.6 优雅降级：AI 系统的稳定性保障
 
-所有工具与 API 均实现 `try/except` 降级。当大模型 API、模型文件或数据库不可用时，系统返回可读的降级信息，保证主链路不因单点故障而崩溃；报告生成失败时回退至模板兜底报告，并在响应中通过 `generation_status` / `fallback_reason` 如实标注。
+工具与 API 对常见运行异常进行捕获和处理。当大模型 API、模型文件或数据库不可用时，系统会尽量返回可读的降级信息；报告生成失败时回退至模板兜底报告，并在响应中通过 `generation_status` 和 `fallback_reason` 标注状态与原因。
 
-### 9.7 从「模型」到「行动」
+### 9.7 从模型到行动
 
-系统将模型能力封装为本地工具，由 LangGraph 工作流按「意图识别 → 规则路由 → 工具调用 → 报告生成」组织执行。前端提供「查看执行明细」面板，可追溯 SQL 语句与 RAG 原文。用户反馈闭环（点赞/点踩 + 管理后台）为后续 Prompt 迭代提供数据支撑。
+系统将模型能力封装为本地工具，由 LangGraph 工作流按“意图识别 → 规则路由 → 工具调用 → 报告生成”组织执行。前端提供“查看执行明细”面板，可追溯 SQL 语句与 RAG 原文。报告点赞/点踩及管理后台提供了基础反馈记录，为后续分析报告和 Prompt 的迭代提供参考，但目前尚不能据此证明报告质量已实际提升。
 
 ---
 
 ## 10. 当前限制与后续迭代方向
 
-本项目定位为可运行、可演示的 AI 应用作品，不等同于已通过生产验收的企业系统。以下边界应如实说明：
+本项目定位为可运行、可演示的个人工程实践项目，不等同于已通过生产验收的企业系统。当前限制如下：
 
-- **MCP / 工具封装**：当前为进程内普通 Python 函数封装，未接入 MCP 协议；如需标准化工具协议，可后续迁移至 MCP SDK 或独立工具服务。
-- **SQL 查询**：宏观数据查询为代码中固定的业务 SQL，并非 Text-to-SQL（自然语言自动生成 SQL）。
-- **多模态识图**：前端支持上传图片并转为 Base64 传输，但后端**未接入真实视觉模型**（界面上已明确标注「多模态识图未接入」，不会伪造识图结果）。
-- **RAG**：使用字符级 TF-IDF，而非稠密语义 Embedding；对同义改写和复杂语义的召回能力有限。
-- **向量库**：每次调用都重建 ChromaDB 集合，适合小规模演示，不适合大语料高并发；生产环境应将文档解析、向量化与入库作为独立的离线/增量任务。
-- **反馈闭环**：已实现反馈持久化落库与管理页查询；「批量召回」已能在真实后端创建召回任务（持久化至 `recall_tasks` 表并返回任务编号），但**尚未接入真实营销触达通道**（不会真的向用户发送信息）。
-- **用户流失预警**：前端流失预警表格、风险分布与特征重要性均已接入真实批量推理接口 `/api/v1/churn/predict`；数据为 RFM 模拟数据，界面已明确标注。
-- **报告导出**：使用浏览器 `window.print()`，不是由服务端生成和存档 PDF。
-- **限流**：单机内存限流（5 次/分钟/IP）不适合多实例生产环境，后续应迁移到 Redis 等共享存储。
-- **数据依赖性**：预测误差和异常识别效果依赖数据快照、训练/测试划分、参数和评估方法；需在固定条件下复现实验后再用于对外汇报。
-- **访问控制**：当前演示后台未包含完整的生产级认证、授权与审计机制，对外部署前需补充。
+- **MCP / 工具封装**：当前是在进程内调用普通 Python 函数，未接入 MCP 协议；如需标准化工具协议，可后续使用 MCP SDK 或拆分独立工具服务。
+- **SQL 查询**：宏观数据查询使用代码中定义的业务 SQL，并非自然语言自动生成 SQL（Text-to-SQL）。
+- **多模态识图**：前端支持上传图片并转为 Base64 传输，但后端尚未接入真实视觉模型；界面明确标注“多模态识图未接入”，不会伪造识图结果。
+- **RAG**：当前使用字符级 TF-IDF，而非稠密语义 Embedding；对同义改写和复杂语义的召回能力有限。
+- **向量库**：当前实现每次检索调用都重建 ChromaDB 集合，适合小规模演示，不适合大语料或高并发；后续可将文档解析、向量化与入库拆分为独立的离线或增量任务。
+- **反馈闭环**：反馈已持久化落库，管理页可查询；“批量召回”可在后端创建任务并持久化至 `recall_tasks` 表、返回任务编号，但尚未接入真实营销触达通道，不会向用户实际发送信息。
+- **用户流失预警**：前端流失预警表格、风险分布与特征重要性已接入批量推理接口 `/api/v1/churn/predict`；数据为 RFM 模拟数据，不代表真实客户预测结果。
+- **报告导出**：通过浏览器 `window.print()` 实现打印或另存为 PDF，不是由服务端生成并存档 PDF 文件。
+- **限流**：当前使用单机内存限流（5 次/分钟/IP），不适合多实例生产环境；后续可迁移至 Redis 等共享存储。
+- **数据与评估依赖性**：预测误差与异常识别效果依赖数据快照、训练/测试划分、参数和评估方法；对外汇报前应在固定条件下重新运行实验。
+- **访问控制**：当前演示后台未包含完整的生产级认证、授权和审计机制，对外部署前需要补齐。
+
+---
+
+## 免责声明
+
+本项目仅用于学习、技术验证与个人作品集展示。宏观数据分析与预测结果不构成投资、政策或商业决策建议；用户流失预测使用的是模拟数据，不代表真实企业客户表现。接入真实数据或对外部署前，应进一步评估数据质量、模型效果、隐私保护、访问控制与运行稳定性。
