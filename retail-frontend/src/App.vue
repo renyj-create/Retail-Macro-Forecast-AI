@@ -104,7 +104,7 @@
                     {{ heroStatus === 'ready' && hero.latest_macro.value != null ? hero.latest_macro.value.toLocaleString() : '—' }}
                     <span class="kpi-unit">亿元</span>
                   </div>
-                  <div class="kpi-meta">{{ heroStatus === 'ready' ? (hero.latest_macro.date || '等待数据') : '数据暂不可用' }}</div>
+                  <div class="kpi-meta">{{ heroStatus === 'ready' ? (hero.latest_macro.date ? '数据截至 ' + hero.latest_macro.date : '等待数据') : '数据暂不可用' }}</div>
                 </div>
                 <div class="panel-kpi">
                   <div class="kpi-label">同比增长</div>
@@ -240,12 +240,37 @@
 
           <div class="result-grid">
             <div v-if="agentData.forecast" class="result-panel">
-              <div class="panel-title">社零预测与置信区间</div>
+              <div class="panel-title">未来社零预测（辅助 · 未验证）</div>
               <div id="homeForecastChart" class="chart-box"></div>
             </div>
             <div v-if="agentData.churn" class="result-panel">
               <div class="panel-title">流失风险分布</div>
               <div id="homeRiskChart" class="chart-box"></div>
+            </div>
+          </div>
+
+          <div v-if="agentData.forecast && agentData.forecast.backtest" class="result-panel backtest-panel">
+            <div class="panel-title">历史三个月回测对比（已验证）</div>
+            <div class="chart-note">
+              训练数据截止 {{ agentData.forecast.backtest.train_end }} ·
+              回测月份 {{ (agentData.forecast.backtest.test_months || []).join(' / ') }}
+              <template v-if="agentData.forecast.data_note"> · {{ agentData.forecast.data_note }}</template>
+            </div>
+            <div id="homeBacktestChart" class="chart-box" style="height: 240px;"></div>
+            <el-table :data="agentData.forecast.backtest.points" size="small" stripe class="backtest-table">
+              <el-table-column prop="date" label="月份" width="90" />
+              <el-table-column prop="forecast" label="预测值(亿)" />
+              <el-table-column prop="actual" label="真实值(亿)" />
+              <el-table-column prop="abs_error" label="绝对误差" />
+              <el-table-column prop="rel_error_pct" label="相对误差%" />
+              <el-table-column label="95% 区间">
+                <template #default="s">{{ s.row.lower }} ~ {{ s.row.upper }}</template>
+              </el-table-column>
+            </el-table>
+            <div class="backtest-metrics">
+              <span class="metric-chip">ARIMA MAPE <b>{{ agentData.forecast.backtest.metrics?.mape ?? '—' }}%</b></span>
+              <span class="metric-chip">沿用上月 MAPE <b>{{ agentData.forecast.backtest.baselines?.naive?.mape ?? '—' }}%</b></span>
+              <span class="metric-chip">同月去年 MAPE <b>{{ agentData.forecast.backtest.baselines?.seasonal?.mape ?? '—' }}%</b></span>
             </div>
           </div>
 
@@ -371,7 +396,7 @@
                 <el-card shadow="never" class="kpi-card">
                   <div class="kpi-title">最新社零总额（亿元）</div>
                   <div class="kpi-value">{{ overviewStatus === 'ready' && overview.latest_macro.value != null ? overview.latest_macro.value.toLocaleString() : '—' }}</div>
-                  <div class="kpi-trend up">同比 {{ overviewStatus === 'ready' && overview.latest_macro.yoy != null ? overview.latest_macro.yoy + '%' : '—' }}<template v-if="overviewStatus === 'ready' && overview.latest_macro.date">（{{ overview.latest_macro.date }}）</template></div>
+                  <div class="kpi-trend up">同比 {{ overviewStatus === 'ready' && overview.latest_macro.yoy != null ? overview.latest_macro.yoy + '%' : '—' }}<template v-if="overviewStatus === 'ready' && overview.latest_macro.date">（数据截至 {{ overview.latest_macro.date }}）</template></div>
                 </el-card>
               </el-col>
               <el-col :span="8">
@@ -392,19 +417,118 @@
             <el-card shadow="never" class="chart-card">
               <template #header>
                 <div class="card-header">
-                  <span>社零总额与增速趋势</span>
-                  <span class="pill pill--sample">数据来源：国家统计局</span>
+                  <span>宏观零售趋势预测</span>
+                  <span class="pill pill--sample">未来预测 · 尚未经过实际值验证</span>
                 </div>
               </template>
-              <div id="macroChart" style="width: 100%; height: 420px;"></div>
-              <div class="chart-note">注：置信区间为 ARIMA 模型基于历史数据的预测，仅供参考，不构成投资建议。</div>
+              <div id="macroChart" style="width: 100%; height: 360px;"></div>
+              <div class="chart-note">实线为历史真实值，橙色虚线为未来预测值，浅色带为名义 95% 预测区间（不代表已验证的长期覆盖率）。数据来源：国家统计局。</div>
             </el-card>
+
+            <el-row :gutter="16" class="forecast-metric-row">
+              <el-col :span="6">
+                <div class="forecast-metric-card">
+                  <div class="fm-label">近期历史回测 MAPE</div>
+                  <div class="fm-value">{{ macroForecast?.backtest?.metrics?.mape != null ? macroForecast.backtest.metrics.mape + '%' : '暂无数据' }}</div>
+                  <div class="fm-note">{{ macroForecast?.backtest ? '回测 ' + (macroForecast.backtest.test_months || []).join(' / ') + '，共 ' + (macroForecast.backtest.test_months || []).length + ' 个月' : '—' }}</div>
+                </div>
+              </el-col>
+              <el-col :span="6">
+                <div class="forecast-metric-card">
+                  <div class="fm-label">近期历史回测 MAE</div>
+                  <div class="fm-value">{{ macroForecast?.backtest?.metrics?.mae != null ? macroForecast.backtest.metrics.mae : '暂无数据' }}</div>
+                  <div class="fm-note">单位：亿元，与原始社零数据一致</div>
+                </div>
+              </el-col>
+              <el-col :span="6">
+                <div class="forecast-metric-card">
+                  <div class="fm-label">近期历史回测 RMSE</div>
+                  <div class="fm-value">{{ macroForecast?.backtest?.metrics?.rmse != null ? macroForecast.backtest.metrics.rmse : '暂无数据' }}</div>
+                  <div class="fm-note">单位：亿元，与原始社零数据一致</div>
+                </div>
+              </el-col>
+              <el-col :span="6">
+                <div class="forecast-metric-card">
+                  <div class="fm-label">多窗口滚动回测 MAPE（均值）</div>
+                  <div class="fm-value">{{ macroForecast?.rolling_backtest?.arima?.mape != null ? macroForecast.rolling_backtest.arima.mape + '%' : '暂无数据' }}</div>
+                  <div class="fm-note">{{ macroForecast?.rolling_backtest?.n_windows ? macroForecast.rolling_backtest.n_windows + ' 个历史窗口的平均值' : '—' }}</div>
+                </div>
+              </el-col>
+            </el-row>
+
+            <el-collapse v-model="macroCollapse" class="macro-collapse">
+              <el-collapse-item name="rolling" title="多窗口滚动回测明细">
+                <p class="collapse-desc">
+                  滚动回测在多个不重叠的历史窗口上分别训练与评估，比单个测试窗口更能反映模型在不同历史阶段的表现；
+                  但当前窗口数量有限，尚不足以证明模型长期稳定。MAPE 为平均绝对百分比误差，不是严格意义上的预测准确率。
+                </p>
+                <el-table v-if="(macroForecast?.rolling_backtest?.windows || []).length" :data="macroForecast.rolling_backtest.windows" size="small" stripe>
+                  <el-table-column label="测试月份" min-width="170">
+                    <template #default="s">{{ (s.row.test_months || []).join(' / ') }}</template>
+                  </el-table-column>
+                  <el-table-column label="ARIMA MAPE" width="110" align="right">
+                    <template #default="s">{{ s.row.arima?.mape != null ? s.row.arima.mape + '%' : '暂无数据' }}</template>
+                  </el-table-column>
+                  <el-table-column label="ARIMA MAE" width="100" align="right">
+                    <template #default="s">{{ s.row.arima?.mae != null ? s.row.arima.mae : '暂无数据' }}</template>
+                  </el-table-column>
+                  <el-table-column label="ARIMA RMSE" width="110" align="right">
+                    <template #default="s">{{ s.row.arima?.rmse != null ? s.row.arima.rmse : '暂无数据' }}</template>
+                  </el-table-column>
+                  <el-table-column label="沿用上月 MAPE" width="120" align="right">
+                    <template #default="s">{{ s.row.naive?.mape != null ? s.row.naive.mape + '%' : '暂无数据' }}</template>
+                  </el-table-column>
+                  <el-table-column label="同月去年 MAPE" width="120" align="right">
+                    <template #default="s">{{ s.row.seasonal?.mape != null ? s.row.seasonal.mape + '%' : '暂无数据' }}</template>
+                  </el-table-column>
+                </el-table>
+                <el-empty v-else description="暂无滚动回测明细数据" :image-size="60" />
+              </el-collapse-item>
+
+              <el-collapse-item name="eval" title="模型评估说明">
+                <div class="eval-block">
+                  <div class="eval-title">评估方法</div>
+                  <p class="collapse-desc">通过历史数据回测，将模型预测值与同一时期的实际值进行对比，并在多个历史窗口中重复评估，以观察模型在不同历史阶段的表现。</p>
+                </div>
+                <div class="eval-block">
+                  <div class="eval-title">结果解读</div>
+                  <p class="collapse-desc">近期回测 MAPE 反映最近三个测试月份的相对预测误差；多窗口滚动回测用于观察模型在不同历史阶段的表现。两者测试范围不同，不能混为一个指标。</p>
+                </div>
+                <div class="eval-block">
+                  <div class="eval-title">基线比较（近期 3 个测试月份）</div>
+                  <el-table v-if="baselineRows.length" :data="baselineRows" size="small">
+                    <el-table-column prop="name" label="模型" min-width="140" />
+                    <el-table-column label="MAPE" width="100" align="right">
+                      <template #default="s">{{ s.row.mape != null ? s.row.mape + '%' : '暂无数据' }}</template>
+                    </el-table-column>
+                    <el-table-column label="MAE" width="110" align="right">
+                      <template #default="s">{{ s.row.mae != null ? s.row.mae : '暂无数据' }}</template>
+                    </el-table-column>
+                    <el-table-column label="RMSE" width="110" align="right">
+                      <template #default="s">{{ s.row.rmse != null ? s.row.rmse : '暂无数据' }}</template>
+                    </el-table-column>
+                  </el-table>
+                  <p v-else class="collapse-desc">当前接口未提供基线数据。</p>
+                  <p class="collapse-desc">在近期三个测试月份中，同月去年基线的 MAPE 低于 ARIMA，说明在该窗口 ARIMA 未明显优于简单基线；这仅反映所选历史窗口的表现，不代表 ARIMA 在所有场景下都更优或更差。</p>
+                </div>
+                <div class="eval-block">
+                  <div class="eval-title">结果限制</div>
+                  <ul class="eval-list">
+                    <li>当前近期回测只有三个测试月份，样本有限。</li>
+                    <li>滚动回测目前只有四个历史窗口，不足以证明模型长期稳定。</li>
+                    <li>数据存在部分月份缺失（1—2 月累计发布口径），现有 ARIMA 序列处理方式存在时间间隔方面的限制。</li>
+                    <li>未来预测值尚未获得实际值验证。</li>
+                    <li>预测区间的名义置信水平（95%）不代表已验证的长期覆盖率。</li>
+                  </ul>
+                </div>
+              </el-collapse-item>
+            </el-collapse>
           </el-tab-pane>
 
           <el-tab-pane label="用户流失预警" name="churn">
             <el-alert v-if="churnStatus === 'offline'" title="流失预测数据暂不可用，请检查后端服务后重试。" type="warning" :closable="false" show-icon style="margin-bottom:16px" />
             <div class="demo-notice">
-              <span class="pill pill--sample">以下用户与流失概率来自 LightGBM 模型对 RFM 模拟数据的真实批量推理</span>
+              <span class="pill pill--sample">以下用户与流失概率来自 LightGBM 模型对 RFM 模拟数据的真实批量推理；特征重要性为平均绝对 SHAP 值（模型解释指标，非百分比）</span>
             </div>
             <el-row :gutter="20" class="kpi-row">
               <el-col :span="6">
@@ -517,13 +641,6 @@
           </div>
           <el-input v-model="query" type="textarea" :rows="4" placeholder="请输入你的业务问题，例如：结合宏观零售数据，给出当前用户流失预警和运营建议" />
           <div class="action-bar">
-            <div class="upload">
-              <el-upload action="#" :auto-upload="false" :show-file-list="false" :on-change="handleImageUpload">
-                <el-button size="small" plain><el-icon><Picture /></el-icon> 上传趋势图</el-button>
-              </el-upload>
-              <span v-if="imageName" class="image-name">{{ imageName }}</span>
-              <el-tag v-if="imageName" type="warning" size="small" effect="plain">多模态识图未接入</el-tag>
-            </div>
             <el-button type="primary" size="large" :loading="loading" @click="submitAgent">
               <el-icon><MagicStick /></el-icon> 开始智能分析
             </el-button>
@@ -550,8 +667,33 @@
 
           <template v-if="agentData.forecast">
             <el-card shadow="never" class="result-card">
-              <template #header><div class="card-header"><span>社零预测与置信区间</span><span class="pill pill--sample">ARIMA 真实预测</span></div></template>
+              <template #header><div class="card-header"><span>社零预测与置信区间</span><span class="pill pill--sample">ARIMA 未来预测 · 未验证</span></div></template>
               <div id="agentForecastChart" style="width: 100%; height: 360px;"></div>
+            </el-card>
+            <el-card v-if="agentData.forecast.backtest" shadow="never" class="result-card">
+              <template #header>
+                <div class="card-header">
+                  <span>历史三个月回测对比（已验证）</span>
+                  <span class="pill pill--sample">训练截止 {{ agentData.forecast.backtest.train_end }}</span>
+                </div>
+              </template>
+              <div class="chart-note">回测月份 {{ (agentData.forecast.backtest.test_months || []).join(' / ') }}<template v-if="agentData.forecast.data_note"> · {{ agentData.forecast.data_note }}</template></div>
+              <div id="agentBacktestChart" style="width: 100%; height: 240px;"></div>
+              <el-table :data="agentData.forecast.backtest.points" size="small" stripe class="backtest-table">
+                <el-table-column prop="date" label="月份" width="90" />
+                <el-table-column prop="forecast" label="预测值(亿)" />
+                <el-table-column prop="actual" label="真实值(亿)" />
+                <el-table-column prop="abs_error" label="绝对误差" />
+                <el-table-column prop="rel_error_pct" label="相对误差%" />
+                <el-table-column label="95% 区间">
+                  <template #default="s">{{ s.row.lower }} ~ {{ s.row.upper }}</template>
+                </el-table-column>
+              </el-table>
+              <div class="backtest-metrics">
+                <span class="metric-chip">ARIMA MAPE <b>{{ agentData.forecast.backtest.metrics?.mape ?? '—' }}%</b></span>
+                <span class="metric-chip">沿用上月 MAPE <b>{{ agentData.forecast.backtest.baselines?.naive?.mape ?? '—' }}%</b></span>
+                <span class="metric-chip">同月去年 MAPE <b>{{ agentData.forecast.backtest.baselines?.seasonal?.mape ?? '—' }}%</b></span>
+              </div>
             </el-card>
           </template>
 
@@ -593,6 +735,20 @@
           <el-card v-for="sec in otherSections" :key="sec.title" shadow="never" class="result-card">
             <template #header><div class="card-header"><span>{{ sec.title.replace(/【|】/g, '') }}</span></div></template>
             <div class="section-text">{{ sec.content || '暂无数据' }}</div>
+          </el-card>
+
+          <el-card v-if="suggestions.length" shadow="never" class="result-card">
+            <template #header><div class="card-header"><span>行动建议</span><span class="pill pill--sample">结构化建议 · 待办功能后续接入</span></div></template>
+            <div v-for="(s, i) in suggestions" :key="i" class="suggestion-item">
+              <div class="suggestion-head">
+                <span class="suggestion-title">{{ s.title || '未命名建议' }}</span>
+                <el-tag :type="getPriorityTagType(s.priority)" size="small" effect="light">{{ s.priority || '普通' }}</el-tag>
+                <el-tag v-if="s.category" size="small" type="info" effect="plain">{{ s.category }}</el-tag>
+              </div>
+              <div v-if="s.description" class="suggestion-desc">{{ s.description }}</div>
+              <div v-if="s.rationale" class="suggestion-meta"><b>原因：</b>{{ s.rationale }}</div>
+              <div v-if="s.evidence" class="suggestion-meta"><b>依据：</b>{{ s.evidence }}</div>
+            </div>
           </el-card>
 
           <el-card shadow="never" class="result-card">
@@ -678,35 +834,80 @@
       <div v-if="activeView === 'kb'" class="page-view">
         <div class="agent-hero">
           <h1 class="page-title">知识库</h1>
-          <p class="page-sub">经营知识辅助检索模块：基于本地 ChromaDB 与字符 n-gram TF-IDF 的轻量向量检索，为 AI 分析提供政策与研报依据，检索结果可追溯到原文片段。</p>
+          <p class="page-sub">为经营分析提供可检索、可追溯的文本依据。</p>
         </div>
-        <el-row :gutter="20" class="kpi-row">
-          <el-col :span="8"><el-card shadow="never" class="kpi-card"><div class="kpi-title">向量数据库</div><div class="kpi-value">ChromaDB</div><div class="kpi-trend">本地持久化</div></el-card></el-col>
-          <el-col :span="8"><el-card shadow="never" class="kpi-card"><div class="kpi-title">分词方案</div><div class="kpi-value">字符 n-gram</div><div class="kpi-trend">TF-IDF，离线可用</div></el-card></el-col>
-          <el-col :span="8"><el-card shadow="never" class="kpi-card"><div class="kpi-title">知识来源</div><div class="kpi-value">docs/policy.txt</div><div class="kpi-trend">示例研报文本</div></el-card></el-col>
-        </el-row>
-        <el-card shadow="never" class="result-card">
-          <template #header><div class="card-header"><span>RAG 检索如何工作</span></div></template>
-          <ol class="kb-steps">
-            <li>读取本地 <code>docs/policy.txt</code>，按空行分块；</li>
-            <li>用字符级 n-gram（2,3）TF-IDF 向量化，写入本地 ChromaDB；</li>
-            <li>对用户问题做同空间向量化，检索 Top-K 最相似片段；</li>
-            <li>命中片段连同来源回传给大模型，作为报告「数据依据」的一部分；</li>
-            <li>未命中时明确返回「未在知识库中找到相关研报」，拒绝编造。</li>
-          </ol>
-          <el-alert type="info" :closable="false" show-icon title="RAG 已接入智能问数 Agent（/api/v1/analyze），在 AI Agent 页执行分析即可看到真实命中片段与来源。" />
+
+        <el-card shadow="never" class="kb-card">
+          <div class="kb-stack">
+            <div class="kb-stack-item">
+              <span class="kb-stack-label">存储层</span>
+              <span class="kb-stack-value">ChromaDB</span>
+              <span class="kb-stack-note">本地持久化</span>
+            </div>
+            <div class="kb-stack-item">
+              <span class="kb-stack-label">检索层</span>
+              <span class="kb-stack-value">字符 n-gram（2,3）+ TF-IDF</span>
+              <span class="kb-stack-note">基于字符级文本特征的轻量检索</span>
+            </div>
+            <div class="kb-stack-item">
+              <span class="kb-stack-label">知识来源</span>
+              <span class="kb-stack-value">docs/policy.txt</span>
+              <span class="kb-stack-note">示例研报文本</span>
+            </div>
+          </div>
         </el-card>
+
+        <el-card shadow="never" class="kb-card">
+          <template #header>
+            <div class="kb-flow-head">
+              <span class="kb-flow-head-title">RAG 检索流程</span>
+              <span class="kb-flow-head-sub">从本地文档到可追溯的原文依据。</span>
+            </div>
+          </template>
+          <ol class="kb-flow">
+            <li class="kb-flow-item">
+              <span class="kb-flow-index">01</span>
+              <div class="kb-flow-body">
+                <div class="kb-flow-title">文档读取与分块</div>
+                <div class="kb-flow-desc">读取本地文本，按空行拆分内容片段。</div>
+              </div>
+            </li>
+            <li class="kb-flow-item">
+              <span class="kb-flow-index">02</span>
+              <div class="kb-flow-body">
+                <div class="kb-flow-title">文本向量化</div>
+                <div class="kb-flow-desc">使用字符 n-gram 与 TF-IDF 表示文本特征。</div>
+              </div>
+            </li>
+            <li class="kb-flow-item">
+              <span class="kb-flow-index">03</span>
+              <div class="kb-flow-body">
+                <div class="kb-flow-title">相似度检索</div>
+                <div class="kb-flow-desc">检索与用户问题相关的 Top-K 文本片段。</div>
+              </div>
+            </li>
+            <li class="kb-flow-item">
+              <span class="kb-flow-index">04</span>
+              <div class="kb-flow-body">
+                <div class="kb-flow-title">返回原文依据</div>
+                <div class="kb-flow-desc">将命中片段及来源交给 Agent，作为报告生成的参考。</div>
+              </div>
+            </li>
+          </ol>
+        </el-card>
+
+        <p class="kb-note">RAG 为智能问数 Agent 提供检索依据；没有有效命中时明确返回，不编造知识库结论。</p>
       </div>
     </main>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick, computed, watch } from 'vue'
+import { ref, onMounted, onBeforeUnmount, nextTick, computed, watch } from 'vue'
 import axios from 'axios'
 import * as echarts from 'echarts'
 import {
-  UserFilled, ChatLineRound, MagicStick, Picture, Loading,
+  UserFilled, ChatLineRound, MagicStick, Loading,
   Right, Cpu, TrendCharts, Collection, Document, Search, WarningFilled,
   Aim, Connection, Notebook
 } from '@element-plus/icons-vue'
@@ -725,8 +926,26 @@ const navItems = [
 const activeView = ref('home')
 const dataTab = ref('macro')
 const macroRange = ref('')
+const macroForecast = ref(null)
+const macroCollapse = ref([])
+const baselineRows = computed(() => {
+  const bl = macroForecast.value?.backtest?.baselines
+  if (!bl) return []
+  const labels = { arima: 'ARIMA(1,1,1)', naive: '沿用上月值', seasonal: '同月去年' }
+  return ['arima', 'naive', 'seasonal'].map(k => ({
+    name: labels[k],
+    mape: bl[k]?.mape ?? null,
+    mae: bl[k]?.mae ?? null,
+    rmse: bl[k]?.rmse ?? null,
+  }))
+})
 const demoCollapse = ref([])
 const backendOnline = ref(false)
+let healthTimer = null
+let healthInFlight = false
+
+// 业务请求成功后同步标记在线（乐观更新）；真正的“离线”判断交给周期性健康探测兜底。
+const markBackendOnline = () => { backendOnline.value = true }
 
 // ==================== 首页静态内容 ====================
 const quickScenarios = [
@@ -781,6 +1000,7 @@ const loadHeroInsight = async () => {
     if (ov.data && ov.data.data) hero.value = ov.data.data
     heroForecast.value = fc.data
     heroStatus.value = 'ready'
+    markBackendOnline()
     nextTick(() => renderHeroTrendChart())
   } catch (e) {
     hero.value = { latest_macro: { date: '', value: null, yoy: null }, churn: { total: null, label_rate: null }, forecast_metrics: null }
@@ -820,9 +1040,9 @@ const renderHeroTrendChart = () => {
   chart.setOption({
     color: ['#2451E6', '#F2552C'],
     tooltip: { trigger: 'axis', backgroundColor: 'rgba(25,24,22,0.92)', borderWidth: 0, textStyle: { color: '#fff', fontSize: 12 }, extraCssText: 'border-radius:8px;' },
-    grid: { left: 8, right: 8, top: 24, bottom: 6, containLabel: true },
+    grid: { left: 12, right: 44, top: 28, bottom: 8, containLabel: true },
     xAxis: { type: 'category', data: cats, boundaryGap: false, axisLine: { lineStyle: { color: '#E8E3DA' } }, axisTick: { show: false }, axisLabel: { color: '#8A857B', interval: Math.ceil(cats.length / 8), hideOverlap: true, fontSize: 10 } },
-    yAxis: { type: 'value', scale: true, axisLabel: { color: '#8A857B', fontSize: 10, formatter: (v) => (v / 10000).toFixed(1) + '万' }, splitLine: { lineStyle: { color: '#F0ECE4', type: 'dashed' } } },
+    yAxis: { type: 'value', scale: true, axisLabel: { color: '#8A857B', fontSize: 10, margin: 8, formatter: (v) => (v / 10000).toFixed(1) + '万' }, splitLine: { lineStyle: { color: '#F0ECE4', type: 'dashed' } } },
     series: [
       { name: '历史真实值', type: 'line', data: histLine, symbol: 'none', smooth: false, lineStyle: { width: 2, color: '#2451E6' }, areaStyle: { color: 'rgba(36,81,230,0.05)' } },
       { name: '预测值', type: 'line', data: fcLine, symbol: 'circle', symbolSize: 5, lineStyle: { width: 2, color: '#F2552C', type: 'dashed' }, itemStyle: { color: '#F2552C' } },
@@ -840,11 +1060,10 @@ const report = ref('')
 const loading = ref(false)
 const agentError = ref('')
 const homeError = ref('')
-const imageName = ref('')
-const imageBase64 = ref('')
 const intent = ref('')
 const intentReason = ref('')
 const sections = ref([])
+const suggestions = ref([])
 const execution = ref([])
 const agentData = ref({ macro: [], forecast: null, churn: null })
 const reportMeta = ref({ status: '', reason: '' })
@@ -868,18 +1087,20 @@ const runAnalysis = async (q) => {
   agentError.value = ''
   homeError.value = ''
   report.value = ''
-  intent.value = ''; intentReason.value = ''; sections.value = []; execution.value = []
+  intent.value = ''; intentReason.value = ''; sections.value = []; suggestions.value = []; execution.value = []
   agentData.value = { macro: [], forecast: null, churn: null }
   reportMeta.value = { status: '', reason: '' }
   kbFragments.value = ''
 
   try {
-    const response = await axios.post(`${API_BASE}/api/v1/analyze`, { query: q, image_base64: imageBase64.value })
+    const response = await axios.post(`${API_BASE}/api/v1/analyze`, { query: q })
     const d = response.data
+    markBackendOnline()
     report.value = d.report
     intent.value = d.intent
     intentReason.value = d.intent_reason
     sections.value = d.sections || []
+    suggestions.value = d.suggestions || []
     execution.value = d.execution || []
     agentData.value = d.data || { macro: [], forecast: null, churn: null }
     reportMeta.value = { status: d.generation_status || 'success', reason: d.fallback_reason || '' }
@@ -912,10 +1133,16 @@ const onHeroKeydown = (e) => {
 const renderResultCharts = () => {
   nextTick(() => {
     if (activeView.value === 'home') {
-      if (agentData.value.forecast) renderForecastChart(document.getElementById('homeForecastChart'), agentData.value.forecast)
+      if (agentData.value.forecast) {
+        renderForecastChart(document.getElementById('homeForecastChart'), agentData.value.forecast)
+        renderBacktestChart(document.getElementById('homeBacktestChart'), agentData.value.forecast.backtest)
+      }
       if (agentData.value.churn) renderRiskChart(document.getElementById('homeRiskChart'), agentData.value.churn.risk_distribution)
     } else if (activeView.value === 'agent') {
-      if (agentData.value.forecast) renderForecastChart(document.getElementById('agentForecastChart'), agentData.value.forecast)
+      if (agentData.value.forecast) {
+        renderForecastChart(document.getElementById('agentForecastChart'), agentData.value.forecast)
+        renderBacktestChart(document.getElementById('agentBacktestChart'), agentData.value.forecast.backtest)
+      }
       if (agentData.value.churn) {
         renderRiskChart(document.getElementById('agentRiskChart'), agentData.value.churn.risk_distribution)
         renderFeatureChart(document.getElementById('agentFeatureChart'), agentData.value.churn.feature_importance)
@@ -924,12 +1151,6 @@ const renderResultCharts = () => {
   })
 }
 
-const handleImageUpload = (uploadFile) => {
-  imageName.value = uploadFile.name
-  const reader = new FileReader()
-  reader.readAsDataURL(uploadFile.raw)
-  reader.onload = () => { imageBase64.value = reader.result.split(',')[1] }
-}
 const exportReport = () => window.print()
 const sendFeedback = async (type) => {
   try {
@@ -964,6 +1185,7 @@ const FEATURE_LABELS = {
 }
 const featureLabel = (f) => FEATURE_LABELS[f] || f
 const getRiskTagType = (level) => ({ '低风险': 'info', '中风险': 'primary', '高风险': 'warning', '极高风险': 'danger' }[level] || 'info')
+const getPriorityTagType = (p) => ({ '高': 'danger', '中': 'warning', '普通': 'info' }[p] || 'info')
 const getRiskAction = (level) => {
   if (level === '低风险') return '持续观察'
   if (level === '中风险') return '关注复购'
@@ -975,7 +1197,14 @@ const getRiskAction = (level) => {
 function initChart(dom) {
   if (!dom) return null
   let inst = echarts.getInstanceByDom(dom)
-  if (!inst) inst = echarts.init(dom)
+  if (!inst) {
+    inst = echarts.init(dom)
+    // 容器尺寸变化时自动重绘（覆盖窗口缩放之外的容器级变化，如标签页切换、折叠面板展开、卡片重排）
+    if (typeof ResizeObserver !== 'undefined') {
+      const ro = new ResizeObserver(() => inst.resize())
+      ro.observe(dom)
+    }
+  }
   return inst
 }
 
@@ -1001,16 +1230,36 @@ const renderForecastChart = (dom, d) => {
   chart.setOption({
     color: ['#2451E6', '#F2552C'],
     tooltip: { trigger: 'axis', backgroundColor: 'rgba(25,24,22,0.92)', borderWidth: 0, textStyle: { color: '#fff', fontSize: 12 }, extraCssText: 'border-radius:8px;' },
-    legend: { data: ['历史真实值', '预测值', '异常点'], bottom: 0, left: 'center', itemWidth: 16, itemHeight: 9, textStyle: { color: '#8A857B', fontSize: 12 } },
-    grid: { left: '3%', right: '4%', top: 40, bottom: 40, containLabel: true },
-    xAxis: { type: 'category', data: categories, boundaryGap: false, axisLine: { lineStyle: { color: '#E8E3DA' } }, axisTick: { show: false }, axisLabel: { color: '#8A857B', interval: Math.ceil(categories.length / 12), hideOverlap: true } },
-    yAxis: { type: 'value', name: '亿元', scale: true, axisLabel: { color: '#8A857B' }, splitLine: { lineStyle: { type: 'dashed', color: '#F0ECE4' } } },
+    legend: { data: ['历史真实值', '未来预测值', '异常点'], bottom: 0, left: 'center', itemWidth: 16, itemHeight: 9, textStyle: { color: '#8A857B', fontSize: 12 } },
+    grid: { left: 72, right: 24, top: 48, bottom: 44, containLabel: true },
+    xAxis: { type: 'category', data: categories, boundaryGap: false, axisLine: { lineStyle: { color: '#E8E3DA' } }, axisTick: { show: false }, axisLabel: { color: '#8A857B', interval: Math.ceil(categories.length / 12), hideOverlap: true, margin: 10 } },
+    yAxis: { type: 'value', name: '亿元', nameLocation: 'middle', nameGap: 48, nameTextStyle: { color: '#8A857B', fontSize: 12 }, scale: true, axisLabel: { color: '#8A857B', margin: 10 }, splitLine: { lineStyle: { type: 'dashed', color: '#F0ECE4' } } },
     series: [
       { name: '历史真实值', type: 'line', data: historicalLine, symbol: 'none', lineStyle: { width: 2.5, color: '#2451E6' }, areaStyle: { color: 'rgba(36,81,230,0.05)' } },
-      { name: '预测值', type: 'line', data: forecastLine, symbol: 'circle', symbolSize: 6, lineStyle: { width: 2.5, color: '#F2552C', type: 'dashed' }, itemStyle: { color: '#F2552C' } },
+      { name: '未来预测值', type: 'line', data: forecastLine, symbol: 'circle', symbolSize: 6, lineStyle: { width: 2.5, color: '#F2552C', type: 'dashed' }, itemStyle: { color: '#F2552C' } },
       { name: '置信区间下界(占位)', type: 'line', data: ciLower, stack: 'ci', symbol: 'none', lineStyle: { opacity: 0 }, areaStyle: { opacity: 0 }, emphasis: { disabled: true } },
       { name: '95% 置信区间', type: 'line', data: ciBand, stack: 'ci', symbol: 'none', lineStyle: { opacity: 0 }, areaStyle: { color: 'rgba(242,85,44,0.16)' }, emphasis: { disabled: true } },
       { name: '异常点', type: 'scatter', data: anomalyData, symbolSize: 9, itemStyle: { color: '#F2552C', borderColor: '#fff', borderWidth: 1.5 }, z: 10 }
+    ]
+  }, true)
+}
+
+const renderBacktestChart = (dom, bt) => {
+  const chart = initChart(dom)
+  if (!chart || !bt || !bt.points) return
+  const months = bt.points.map(p => p.date)
+  const forecast = bt.points.map(p => p.forecast)
+  const actual = bt.points.map(p => p.actual)
+  chart.setOption({
+    color: ['#F2552C', '#2451E6'],
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, backgroundColor: 'rgba(25,24,22,0.92)', borderWidth: 0, textStyle: { color: '#fff', fontSize: 12 }, extraCssText: 'border-radius:8px;' },
+    legend: { data: ['预测值', '真实值'], bottom: 0, left: 'center', itemWidth: 16, itemHeight: 9, textStyle: { color: '#8A857B', fontSize: 12 } },
+    grid: { left: 72, right: 20, top: 24, bottom: 40, containLabel: true },
+    xAxis: { type: 'category', data: months, axisLine: { lineStyle: { color: '#E8E3DA' } }, axisTick: { show: false }, axisLabel: { color: '#4B4740', margin: 10 } },
+    yAxis: { type: 'value', name: '亿元', nameLocation: 'middle', nameGap: 48, nameTextStyle: { color: '#8A857B', fontSize: 12 }, scale: true, axisLabel: { color: '#8A857B', margin: 10 }, splitLine: { lineStyle: { type: 'dashed', color: '#F0ECE4' } } },
+    series: [
+      { name: '预测值', type: 'bar', data: forecast, barMaxWidth: 26, itemStyle: { color: '#F2552C', borderRadius: [4, 4, 0, 0] }, label: { show: true, position: 'top', color: '#8A857B', fontSize: 10 } },
+      { name: '真实值', type: 'bar', data: actual, barMaxWidth: 26, itemStyle: { color: '#2451E6', borderRadius: [4, 4, 0, 0] }, label: { show: true, position: 'top', color: '#4B4740', fontSize: 10 } }
     ]
   }, true)
 }
@@ -1021,9 +1270,9 @@ const renderRiskChart = (dom, dist) => {
   const colors = { '低风险': '#B9C4E6', '中风险': '#2451E6', '高风险': '#E8923A', '极高风险': '#F2552C' }
   chart.setOption({
     tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, backgroundColor: 'rgba(25,24,22,0.92)', borderWidth: 0, textStyle: { color: '#fff', fontSize: 12 }, extraCssText: 'border-radius:8px;' },
-    grid: { left: '8%', right: '6%', top: 20, bottom: 30, containLabel: true },
-    xAxis: { type: 'category', data: dist.map(d => d.level), axisLine: { lineStyle: { color: '#E8E3DA' } }, axisTick: { show: false }, axisLabel: { color: '#8A857B' } },
-    yAxis: { type: 'value', name: '人数', axisLabel: { color: '#8A857B' }, splitLine: { lineStyle: { type: 'dashed', color: '#F0ECE4' } } },
+    grid: { left: 64, right: 28, top: 24, bottom: 32, containLabel: true },
+    xAxis: { type: 'category', data: dist.map(d => d.level), axisLine: { lineStyle: { color: '#E8E3DA' } }, axisTick: { show: false }, axisLabel: { color: '#8A857B', margin: 10 } },
+    yAxis: { type: 'value', name: '人数', nameLocation: 'middle', nameGap: 44, nameTextStyle: { color: '#8A857B', fontSize: 12 }, axisLabel: { color: '#8A857B', margin: 10 }, splitLine: { lineStyle: { type: 'dashed', color: '#F0ECE4' } } },
     series: [{ type: 'bar', data: dist.map(d => ({ value: d.count, itemStyle: { color: colors[d.level] || '#2451E6' } })), barMaxWidth: 48, borderRadius: [6, 6, 0, 0], label: { show: true, position: 'top', color: '#4B4740', formatter: '{c}' } }]
   }, true)
 }
@@ -1032,11 +1281,19 @@ const renderFeatureChart = (dom, fi) => {
   const chart = initChart(dom)
   if (!chart || !fi) return
   const top = (fi || []).slice(0, 7).slice().reverse()
+  const labels = top.map(f => featureLabel(f.feature))
   chart.setOption({
-    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, backgroundColor: 'rgba(25,24,22,0.92)', borderWidth: 0, textStyle: { color: '#fff', fontSize: 12 }, extraCssText: 'border-radius:8px;' },
-    grid: { left: '24%', right: '8%', top: 10, bottom: 30, containLabel: true },
-    xAxis: { type: 'value', name: '重要性', axisLabel: { color: '#8A857B' }, splitLine: { lineStyle: { type: 'dashed', color: '#F0ECE4' } } },
-    yAxis: { type: 'category', data: top.map(f => featureLabel(f.feature)), axisLine: { lineStyle: { color: '#E8E3DA' } }, axisTick: { show: false }, axisLabel: { color: '#4B4740' } },
+    tooltip: {
+      trigger: 'axis', axisPointer: { type: 'shadow' }, backgroundColor: 'rgba(25,24,22,0.92)', borderWidth: 0, textStyle: { color: '#fff', fontSize: 12 }, extraCssText: 'border-radius:8px;',
+      formatter: (params) => {
+        const p = Array.isArray(params) ? params[0] : params
+        const name = labels[p.dataIndex] != null ? labels[p.dataIndex] : p.name
+        return `${name}<br/>重要性（平均绝对 SHAP）：${Number(p.value).toFixed(3)}`
+      },
+    },
+    grid: { left: 12, right: 64, top: 12, bottom: 34, containLabel: true },
+    xAxis: { type: 'value', name: '重要性', nameLocation: 'end', nameGap: 18, nameTextStyle: { color: '#8A857B', fontSize: 12 }, axisLabel: { color: '#8A857B', margin: 8 }, splitLine: { lineStyle: { type: 'dashed', color: '#F0ECE4' } } },
+    yAxis: { type: 'category', data: labels, axisLine: { lineStyle: { color: '#E8E3DA' } }, axisTick: { show: false }, axisLabel: { color: '#4B4740', width: 110, overflow: 'truncate', interval: 0, margin: 10 } },
     series: [{ type: 'bar', data: top.map(f => f.importance), barMaxWidth: 20, itemStyle: { color: '#2451E6', borderRadius: [0, 6, 6, 0] }, label: { show: true, position: 'right', color: '#8A857B', formatter: (p) => Number(p.value).toFixed(3) } }]
   }, true)
 }
@@ -1065,6 +1322,7 @@ const loadOverview = async () => {
     if (!data.data) throw new Error('总览接口未返回数据')
     overview.value = data.data
     overviewStatus.value = 'ready'
+    markBackendOnline()
   } catch (e) {
     overview.value = { latest_macro: { date: '', value: null, yoy: null }, churn: { total: null, label_rate: null }, forecast_metrics: null, model_eval: { auc: null, ks: null } }
     overviewStatus.value = 'offline'
@@ -1095,6 +1353,7 @@ const loadChurn = async () => {
     const { data } = await axios.get(`${API_BASE}/api/v1/churn/predict`, { params: { top_n: 100 } })
     churn.value = data.data || {}
     churnStatus.value = 'ready'
+    markBackendOnline()
     nextTick(() => {
       renderRiskChart(document.getElementById('riskChart'), churn.value.risk_distribution)
       renderFeatureChart(document.getElementById('featureChart'), churn.value.feature_importance)
@@ -1164,11 +1423,13 @@ const initMacroChart = async () => {
   try {
     const { data } = await axios.get(`${API_BASE}/api/v1/forecast`)
     myChart.hideLoading()
+    macroForecast.value = data
     renderForecastChart(chartDom, data)
     if (data.historical_dates && data.historical_dates.length) {
       macroRange.value = `${data.historical_dates[0]} 至 ${data.historical_dates[data.historical_dates.length - 1]}`
     }
   } catch (error) {
+    macroForecast.value = null
     console.warn('预测接口调用失败:', error)
     myChart.hideLoading()
     myChart.clear()
@@ -1177,8 +1438,23 @@ const initMacroChart = async () => {
 }
 
 const checkHealth = async () => {
-  try { const { data } = await axios.get(`${API_BASE}/health`, { timeout: 4000 }); backendOnline.value = data.status === 'ok' }
-  catch (e) { backendOnline.value = false }
+  // 防止并发触发产生重复探测
+  if (healthInFlight) return
+  healthInFlight = true
+  const wasOnline = backendOnline.value
+  try {
+    const { data } = await axios.get(`${API_BASE}/health`, { timeout: 4000 })
+    backendOnline.value = data && data.status === 'ok'
+  } catch (e) {
+    backendOnline.value = false
+  } finally {
+    healthInFlight = false
+  }
+  // 从离线恢复到在线时，自动重载处于离线空态的数据面板，避免顶部「服务在线」与面板「请启动后端服务」互相矛盾
+  if (!wasOnline && backendOnline.value) {
+    if (heroStatus.value === 'offline') loadHeroInsight()
+    if (overviewStatus.value === 'offline') loadOverview()
+  }
 }
 
 onMounted(() => {
@@ -1186,8 +1462,14 @@ onMounted(() => {
     document.querySelectorAll('[id$="Chart"]').forEach(dom => { const inst = echarts.getInstanceByDom(dom); if (inst) inst.resize() })
   })
   checkHealth()
+  // 单一周期性健康探测：首次检查失败后可持续重试，且避免把单次业务请求成功误当成永久健康保证。
+  healthTimer = setInterval(checkHealth, 30000)
   loadOverview()
   loadHeroInsight()
+})
+
+onBeforeUnmount(() => {
+  if (healthTimer) { clearInterval(healthTimer); healthTimer = null }
 })
 
 // 示例区域展开时渲染演示图表（默认折叠，避免首屏占用）
@@ -1370,6 +1652,11 @@ watch(dataTab, (tab) => {
 .result-panel { padding: 18px; border: 1px solid var(--line); border-radius: 14px; }
 .panel-title { font-size: 14px; font-weight: 700; margin-bottom: 12px; }
 .chart-box { width: 100%; height: 300px; }
+.backtest-panel { margin-bottom: 24px; }
+.backtest-table { margin-top: 12px; }
+.backtest-metrics { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 12px; }
+.metric-chip { font-size: 12px; color: var(--ink-2); background: var(--surface-warm); border: 1px solid var(--line-soft); padding: 5px 12px; border-radius: 999px; }
+.metric-chip b { color: var(--ink); font-family: var(--font-mono); margin-left: 2px; }
 .process-block { margin-bottom: 24px; padding: 20px 22px; background: var(--surface-warm); border: 1px solid var(--line-soft); border-radius: 14px; }
 .process-head { font-size: 14px; font-weight: 700; color: var(--ink); margin-bottom: 14px; }
 .process-list { list-style: none; margin: 0; padding: 0; }
@@ -1450,6 +1737,16 @@ watch(dataTab, (tab) => {
 .chart-card { border-radius: 14px; border: 1px solid var(--line); margin-bottom: 20px; }
 .card-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-weight: 700; font-size: 15px; color: var(--ink); }
 .chart-note { margin-top: 12px; font-size: 12px; color: var(--ink-3); text-align: right; }
+.forecast-metric-row { margin: 20px 0; }
+.forecast-metric-card { padding: 18px 20px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; height: 100%; }
+.fm-label { font-size: 12px; color: var(--ink-3); margin-bottom: 10px; }
+.fm-value { font-family: var(--font-mono); font-size: 26px; font-weight: 800; color: var(--ink); line-height: 1.1; }
+.fm-note { margin-top: 8px; font-size: 12px; color: var(--ink-3); line-height: 1.5; }
+.macro-collapse { border: 1px solid var(--line); border-radius: 14px; background: var(--surface); overflow: hidden; }
+.collapse-desc { margin: 0 0 14px; font-size: 13px; color: var(--ink-2); line-height: 1.7; }
+.eval-block { margin-bottom: 18px; }
+.eval-title { font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 6px; }
+.eval-list { margin: 0; padding-left: 18px; font-size: 13px; color: var(--ink-2); line-height: 1.9; }
 .filter-bar { display: flex; align-items: center; gap: 24px; margin-bottom: 16px; }
 .filter-item { display: flex; align-items: center; gap: 8px; }
 .filter-label { font-size: 13px; color: var(--ink-2); }
@@ -1471,9 +1768,7 @@ watch(dataTab, (tab) => {
 .example-list { margin-bottom: 14px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .example-label { font-size: 13px; color: var(--ink-2); }
 .example-tag { cursor: pointer; white-space: normal; height: auto; line-height: 1.5; padding: 6px 10px; }
-.action-bar { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; }
-.upload { display: flex; align-items: center; gap: 10px; }
-.image-name { color: var(--accent); font-size: 14px; }
+.action-bar { display: flex; justify-content: flex-end; align-items: center; margin-top: 16px; }
 .agent-error { margin-top: 12px; color: var(--coral); font-size: 14px; display: flex; align-items: center; gap: 8px; }
 .agent-status-card { border-radius: 16px; margin-bottom: 20px; }
 .agent-loading { display: flex; align-items: center; gap: 12px; color: var(--ink-2); font-size: 15px; padding: 8px 0; }
@@ -1482,6 +1777,13 @@ watch(dataTab, (tab) => {
 .result-card { border-radius: 16px; border: 1px solid var(--line); }
 .core-card { border-left: 4px solid var(--accent); }
 .section-text { white-space: pre-wrap; line-height: 1.85; color: var(--ink); font-size: 14px; }
+.suggestion-item { padding: 14px 0; border-bottom: 1px dashed var(--line); }
+.suggestion-item:last-child { border-bottom: none; padding-bottom: 0; }
+.suggestion-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.suggestion-title { font-size: 14px; font-weight: 700; color: var(--ink); }
+.suggestion-desc { font-size: 13px; color: var(--ink-2); line-height: 1.7; }
+.suggestion-meta { font-size: 12.5px; color: var(--ink-3); margin-top: 4px; line-height: 1.6; }
+.suggestion-meta b { color: var(--ink-2); }
 .anomaly-tags { display: flex; flex-wrap: wrap; gap: 8px; }
 .anomaly-tag { font-size: 13px; }
 .report-actions { display: flex; gap: 12px; }
@@ -1491,8 +1793,29 @@ watch(dataTab, (tab) => {
 .exec-code { margin: 0; padding: 10px 12px; background-color: #191816; color: #ECE9E2; border-radius: 8px; font-size: 12px; line-height: 1.6; overflow-x: auto; font-family: var(--font-mono); }
 
 /* 知识库页 */
-.kb-steps { margin: 0; padding-left: 20px; font-size: 14px; color: var(--ink-2); line-height: 2; }
-.kb-steps code { background: var(--surface-warm); padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+.kb-card { border-radius: 16px; border: 1px solid var(--line); margin-bottom: 16px; }
+.kb-stack { display: grid; grid-template-columns: repeat(3, 1fr); }
+.kb-stack-item { display: flex; flex-direction: column; gap: 6px; }
+.kb-stack-item + .kb-stack-item { padding-left: 28px; border-left: 1px solid var(--line-soft); }
+.kb-stack-label { font-size: 12px; color: var(--ink-3); }
+.kb-stack-value { font-size: 15px; font-weight: 700; color: var(--ink); font-family: var(--font-mono); letter-spacing: -0.1px; line-height: 1.4; overflow-wrap: break-word; }
+.kb-stack-note { font-size: 12.5px; color: var(--ink-2); line-height: 1.6; }
+
+.kb-flow-head { display: flex; flex-direction: column; gap: 3px; }
+.kb-flow-head-title { font-size: 15px; font-weight: 700; color: var(--ink); }
+.kb-flow-head-sub { font-size: 12px; color: var(--ink-3); }
+
+.kb-flow { list-style: none; margin: 0; padding: 0; }
+.kb-flow-item { display: flex; gap: 16px; padding: 14px 0; }
+.kb-flow-item:first-child { padding-top: 0; }
+.kb-flow-item:last-child { padding-bottom: 0; }
+.kb-flow-item + .kb-flow-item { border-top: 1px solid var(--line-soft); }
+.kb-flow-index { font-family: var(--font-mono); font-size: 12px; font-weight: 600; color: var(--accent); flex-shrink: 0; width: 24px; padding-top: 2px; }
+.kb-flow-body { flex: 1; min-width: 0; }
+.kb-flow-title { font-size: 14px; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
+.kb-flow-desc { font-size: 12.5px; line-height: 1.6; color: var(--ink-2); }
+
+.kb-note { margin: 0; font-size: 12.5px; line-height: 1.8; color: var(--ink-3); }
 
 /* ===== 响应式 ===== */
 @media (max-width: 1080px) {
@@ -1511,6 +1834,8 @@ watch(dataTab, (tab) => {
   .result-grid { grid-template-columns: 1fr; }
   .demo-card { grid-template-columns: 1fr; }
   .kb-strip { flex-direction: column; align-items: flex-start; }
+  .kb-stack { grid-template-columns: 1fr; }
+  .kb-stack-item + .kb-stack-item { padding-left: 0; border-left: none; padding-top: 16px; border-top: 1px solid var(--line-soft); }
 }
 @media (max-width: 620px) {
   .page-container { padding: 0 16px 64px; }

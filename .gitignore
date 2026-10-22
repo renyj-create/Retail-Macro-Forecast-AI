@@ -22,3 +22,5 @@ data/processed/*.csv
 chroma_db/env
 src/data_pipeline/data/
 chroma_db/
+evals/traces/
+*.bak*

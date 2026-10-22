@@ -11,12 +11,14 @@ import sqlite3
 import json
 import sys
 import os
+import math
 
 # 🌟 核心：获取项目根目录并加入环境变量
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(BASE_DIR)
 
 from src.agents.graph_workflow import run_agent
+from src.agents.report_store import init_report_table, save_report, new_report_id
 
 # 🌟 数据库路径：复用项目根目录的 retail.db（与 data_pipeline / tools 保持一致）
 DB_PATH = os.path.join(BASE_DIR, 'retail.db')
@@ -55,6 +57,7 @@ def init_feedback_table():
 
 # 启动时初始化数据表
 init_feedback_table()
+init_report_table(DB_PATH)
 
 app = FastAPI(
     title="零售消费品智能洞察 API",
@@ -126,6 +129,15 @@ class ReportSection(BaseModel):
     content: str
 
 
+class Suggestion(BaseModel):
+    title: str = ""
+    description: str = ""
+    rationale: str = ""
+    evidence: str = ""
+    category: str = ""
+    priority: str = "普通"
+
+
 class MacroPoint(BaseModel):
     date: str
     value: float
@@ -145,9 +157,13 @@ class ReportResponse(BaseModel):
     generation_status: str = "success"
     fallback_reason: str = ""
     sections: List[ReportSection] = Field(default_factory=list)
+    suggestions: List[Suggestion] = Field(default_factory=list)
     execution: List[ExecutionRecord] = Field(default_factory=list)
     data: AnalyzeData = Field(default_factory=AnalyzeData)
     kb_fragments: str = ""
+    fact_check: Optional[Dict[str, Any]] = None
+    report_id: str = ""
+    report_persisted: bool = False
 
 
 class FeedbackRequest(BaseModel):
@@ -197,9 +213,10 @@ class FeedbackStatsResponse(BaseModel):
 
 
 class ForecastMetrics(BaseModel):
-    mae: float
-    rmse: float
-    mape: float
+    mae: Optional[float] = None
+    rmse: Optional[float] = None
+    mape: Optional[float] = None
+    n: Optional[int] = None
 
 
 class AnomalyPoint(BaseModel):
@@ -216,6 +233,10 @@ class ForecastResponse(BaseModel):
     upper_bound: List[float]
     metrics: ForecastMetrics
     anomalies: List[AnomalyPoint] = Field(default_factory=list)
+    backtest: Optional[Dict[str, Any]] = None
+    rolling_backtest: Optional[Dict[str, Any]] = None
+    data_note: str = ""
+    forecast_note: str = ""
 
 
 class RecallRequest(BaseModel):
@@ -254,6 +275,25 @@ async def analyze_retail_data(request: Request, body: QueryRequest):
         macro_payload = result.get("macro_payload") or []
         forecast_payload = result.get("forecast_payload")
         churn_payload = result.get("churn_payload")
+        suggestions = result.get("suggestions") or []
+
+        # 为来源报告建立持久化记录（唯一 report_id）
+        report_id = new_report_id()
+        report_persisted = False
+        try:
+            save_report(
+                DB_PATH,
+                report_id,
+                body.query,
+                result.get("intent", ""),
+                result.get("generation_status", "success"),
+                result.get("fallback_reason", ""),
+                result["final_report"],
+                suggestions,
+            )
+            report_persisted = True
+        except Exception as e:
+            print(f"[API] 报告持久化失败（report_id={report_id}）: {e}")
 
         return ReportResponse(
             report=result["final_report"],
@@ -265,6 +305,7 @@ async def analyze_retail_data(request: Request, body: QueryRequest):
                 ReportSection(title=s["title"], content=s["content"])
                 for s in result.get("report_sections", [])
             ],
+            suggestions=[Suggestion(**s) for s in suggestions],
             execution=[
                 ExecutionRecord(**rec) for rec in result.get("execution_trace", [])
             ],
@@ -274,6 +315,9 @@ async def analyze_retail_data(request: Request, body: QueryRequest):
                 churn=churn_payload,
             ),
             kb_fragments=result.get("kb_fragments", ""),
+            fact_check=result.get("fact_check"),
+            report_id=report_id,
+            report_persisted=report_persisted,
         )
     except HTTPException:
         raise
@@ -338,6 +382,15 @@ def create_recall_task(request: RecallRequest):
         conn.close()
 
 
+def _finite_float(value):
+    """把数据库值安全转换为有限 float；对 NaN / ±Inf / None / 非数值返回 None。"""
+    try:
+        f = float(value)
+    except (TypeError, ValueError):
+        return None
+    return f if math.isfinite(f) else None
+
+
 # ======================================================================
 # 数据总览（真实数据，供前端 KPI 卡片）
 # ======================================================================
@@ -347,20 +400,31 @@ def overview():
     try:
         conn = sqlite3.connect(DB_PATH)
         conn.row_factory = sqlite3.Row
-        latest = conn.execute(
+        # 与单月同比口径一致：仅取当月值与同比都非空的最新记录，再经 _finite_float 兜底 NaN/Inf，
+        # 不把「1—2 月累计发布」口径（当月值/同比为空）误当成单月数据。
+        recent_rows = conn.execute(
             "SELECT date, retail_sales_current, yoy_growth FROM macro_retail_sales "
-            "ORDER BY date DESC LIMIT 1"
-        ).fetchone()
+            "WHERE retail_sales_current IS NOT NULL AND yoy_growth IS NOT NULL "
+            "ORDER BY date DESC LIMIT 20"
+        ).fetchall()
         churn_row = conn.execute(
             "SELECT COUNT(*) AS total, AVG(is_churn) AS rate FROM churn_dataset"
         ).fetchone()
         conn.close()
 
-        latest_macro = {
-            "date": str(latest["date"])[:7] if latest else "",
-            "value": round(float(latest["retail_sales_current"]), 1) if latest else 0.0,
-            "yoy": round(float(latest["yoy_growth"]), 2) if latest else 0.0,
-        }
+        # 依次取最新一条「有效」记录；全无效时返回明确空态（不伪造 0 / 不虚构月份）
+        latest_macro = {"date": "", "value": None, "yoy": None}
+        for row in recent_rows:
+            value = _finite_float(row["retail_sales_current"])
+            yoy = _finite_float(row["yoy_growth"])
+            if value is None or yoy is None:
+                continue
+            latest_macro = {
+                "date": str(row["date"])[:7],
+                "value": round(value, 1),
+                "yoy": round(yoy, 2),
+            }
+            break
         churn_total = int(churn_row["total"]) if churn_row["total"] is not None else 0
         churn_rate = round(float(churn_row["rate"]), 4) if churn_row["rate"] is not None else 0.0
 
@@ -507,10 +571,41 @@ def feedback_stats():
 # ======================================================================
 @app.get("/api/v1/forecast", response_model=ForecastResponse)
 def forecast_retail_sales():
-    """读取宏观社零数据，训练 ARIMA(1,1,1) 并返回结构化预测结果（含置信区间与异常点）"""
+    """读取宏观社零数据，训练 ARIMA(1,1,1) 并返回结构化预测结果（含历史回测对比、基线对比、置信区间与异常点）"""
     try:
         from src.models.train_timeseries import run_forecast
         result = run_forecast(steps=3, test_months=3, order=(1, 1, 1))
         return ForecastResponse(**result)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"时序预测服务暂时不可用: {str(e)}")
+
+
+# ======================================================================
+# 知识库检索（独立测试面板）
+# ======================================================================
+@app.get("/api/v1/kb/search")
+def kb_search(q: str = Query(..., min_length=1), top_k: int = Query(5, ge=1, le=10)):
+    """独立 RAG 检索：对用户问题执行 TF-IDF + ChromaDB 检索，返回结构化命中片段与余弦距离。"""
+    try:
+        from src.agents.tools import retrieve_kb
+        result = retrieve_kb(q, top_k=top_k)
+        hits = [
+            {
+                "text": h["text"],
+                "distance": h["distance"],
+                "score": round(1 - h["distance"], 4),
+            }
+            for h in result.get("hits", [])
+        ]
+        return {
+            "status": "ok",
+            "message": "查询成功",
+            "data": {
+                "query": q,
+                "source": result.get("source", ""),
+                "hit_count": len(hits),
+                "hits": hits,
+            },
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"知识库检索失败: {str(e)}")

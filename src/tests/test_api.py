@@ -6,7 +6,10 @@ FastAPI 集成测试：使用 TestClient 覆盖主要接口的真实执行路径
 """
 import os
 import sys
+import sqlite3
+import tempfile
 import unittest
+from unittest.mock import patch
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 if BASE_DIR not in sys.path:
@@ -21,6 +24,10 @@ class TestAPI(unittest.TestCase):
     def setUpClass(cls):
         cls._saved_client = gw.client
         gw.client = None
+        # 隔离 RAG 的 Chroma 持久化目录，避免污染真实 chroma_db
+        cls._tmpdir = tempfile.TemporaryDirectory()
+        cls._saved_chroma_path = gw.mcp_server.chroma_path
+        gw.mcp_server.chroma_path = os.path.join(cls._tmpdir.name, "chroma_db")
         from fastapi.testclient import TestClient
         from src.api.main import app
         cls.client = TestClient(app)
@@ -28,6 +35,8 @@ class TestAPI(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         gw.client = cls._saved_client
+        gw.mcp_server.chroma_path = cls._saved_chroma_path
+        cls._tmpdir.cleanup()
 
     def test_01_health(self):
         r = self.client.get("/health")
@@ -53,7 +62,20 @@ class TestAPI(unittest.TestCase):
         self.assertTrue(data["feature_importance"])
 
     def test_04_churn_recall(self):
-        r = self.client.post("/api/v1/churn/recall", json={"user_ids": [10407, 14921]})
+        import src.api.main as api_main
+        # 重定向 recall 写入到临时库，避免污染真实 retail.db
+        tmp_db = os.path.join(self._tmpdir.name, "recall_test.db")
+        conn = sqlite3.connect(tmp_db)
+        conn.execute(
+            "CREATE TABLE recall_tasks (id INTEGER PRIMARY KEY AUTOINCREMENT, "
+            "user_ids TEXT NOT NULL, user_count INTEGER NOT NULL, "
+            "status TEXT NOT NULL DEFAULT 'created', "
+            "created_at TEXT NOT NULL DEFAULT (datetime('now','localtime')))"
+        )
+        conn.commit()
+        conn.close()
+        with patch.object(api_main, "DB_PATH", tmp_db):
+            r = self.client.post("/api/v1/churn/recall", json={"user_ids": [10407, 14921]})
         self.assertEqual(r.status_code, 200)
         data = r.json()["data"]
         self.assertEqual(data["user_count"], 2)
@@ -64,15 +86,28 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(r.status_code, 400)
 
     def test_06_analyze(self):
-        r = self.client.post(
-            "/api/v1/analyze",
-            json={"query": "结合宏观零售数据，给出当前用户流失预警和运营建议", "image_base64": ""},
-        )
+        import src.api.main as api_main
+        from src.agents.report_store import init_report_table
+        # 将来源报告持久化重定向到临时库，避免污染真实 retail.db
+        tmp_db = os.path.join(self._tmpdir.name, "report_test.db")
+        init_report_table(tmp_db)
+        with patch.object(api_main, "DB_PATH", tmp_db):
+            r = self.client.post(
+                "/api/v1/analyze",
+                json={"query": "结合宏观零售数据，给出当前用户流失预警和运营建议", "image_base64": ""},
+            )
         self.assertEqual(r.status_code, 200)
         d = r.json()
         self.assertEqual(d["intent"], "综合分析")
         self.assertEqual(d["generation_status"], "fallback")  # client=None → 模板兜底
         self.assertEqual(len(d["sections"]), 6)
+        # 模板兜底不伪造结构化建议，应为空数组
+        self.assertEqual(d["suggestions"], [])
+        # 模板兜底报告不做大模型关键数字覆盖核对，应为 skipped
+        self.assertEqual(d["fact_check"]["status"], "skipped")
+        # 来源报告持久化：唯一 report_id 且已保存
+        self.assertTrue(d["report_id"])
+        self.assertTrue(d["report_persisted"])
         # 执行追踪：意图识别 + 工具 + 报告生成
         names = [e["name"] for e in d["execution"]]
         self.assertIn("intent_recognition", names)
@@ -93,6 +128,19 @@ class TestAPI(unittest.TestCase):
         data = r.json()["data"]
         self.assertGreater(data["latest_macro"]["value"], 0)
         self.assertGreater(data["churn"]["total"], 0)
+
+    def test_09_analyze_report_persist_failure(self):
+        """报告持久化失败时，接口仍正常返回报告，并明确标记 report_persisted=False。"""
+        import src.api.main as api_main
+        with patch.object(api_main, "save_report", side_effect=RuntimeError("db down")):
+            r = self.client.post(
+                "/api/v1/analyze",
+                json={"query": "结合宏观零售数据，给出当前用户流失预警和运营建议", "image_base64": ""},
+            )
+        self.assertEqual(r.status_code, 200)
+        d = r.json()
+        self.assertEqual(d["report_persisted"], False)
+        self.assertTrue(d["report"])
 
 
 if __name__ == "__main__":

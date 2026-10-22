@@ -7,6 +7,7 @@ LangGraph 工作流测试：覆盖意图路由、真实工具调用与报告降�
 """
 import os
 import sys
+import tempfile
 import unittest
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -41,10 +42,16 @@ class TestWorkflow(unittest.TestCase):
         # 强制大模型不可用，走规则意图识别 + 模板兜底，保证测试确定性
         cls._saved_client = gw.client
         gw.client = None
+        # 隔离 RAG 的 Chroma 持久化目录，避免污染真实 chroma_db
+        cls._tmpdir = tempfile.TemporaryDirectory()
+        cls._saved_chroma_path = gw.mcp_server.chroma_path
+        gw.mcp_server.chroma_path = os.path.join(cls._tmpdir.name, "chroma_db")
 
     @classmethod
     def tearDownClass(cls):
         gw.client = cls._saved_client
+        gw.mcp_server.chroma_path = cls._saved_chroma_path
+        cls._tmpdir.cleanup()
 
     def _tool_names(self, result):
         return [rec["name"] for rec in result.get("execution_trace", [])]

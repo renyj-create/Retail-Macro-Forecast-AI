@@ -67,13 +67,13 @@ class TestAgent(unittest.TestCase):
 
     def test_03_query_macro_sqlite(self):
         """SQL 查询工具：在临时数据库上验证真实 SQL 逻辑与结构化 payload。"""
-        result = self.mcp_server.query_macro_sqlite(limit=2)
+        result, payload = self.mcp_server.query_macro_sqlite(limit=2)
         self.assertIn("39824.4", result)
         self.assertIn("0.4", result)
 
         # 结构化 payload 应包含真实数据与正确的月份格式（YYYY-MM）
-        self.assertEqual(len(self.mcp_server.last_macro_payload), 2)
-        self.assertEqual(self.mcp_server.last_macro_payload[0]["date"], "2026-08")
+        self.assertEqual(len(payload), 2)
+        self.assertEqual(payload[0]["date"], "2026-08")
 
         # 执行追踪应记录工具名 / 状态 / 耗时 / SQL
         rec = self.mcp_server._execution_summary("query_macro_sqlite")
@@ -83,9 +83,8 @@ class TestAgent(unittest.TestCase):
 
     def test_04_predict_churn_batch(self):
         """真实批量流失推理：应返回风险分布、特征归因与高风险用户。"""
-        result = self.mcp_server.predict_churn_batch(top_n=5)
+        result, payload = self.mcp_server.predict_churn_batch(top_n=5)
         self.assertIn("风险分布", result)
-        payload = self.mcp_server.last_churn_payload
         self.assertIsNotNone(payload)
         self.assertGreater(payload["total"], 0)
         self.assertIn("risk_distribution", payload)

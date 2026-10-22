@@ -2,6 +2,7 @@
 import os
 import sys
 import time
+import math
 import sqlite3
 import pandas as pd
 import joblib
@@ -10,6 +11,78 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 # 🌟 将项目根目录加入搜索路径，使本文件可被独立导入（无需依赖 graph_workflow 的 sys.path 处理）
 if BASE_DIR not in sys.path:
     sys.path.append(BASE_DIR)
+
+
+def _finite_float(value):
+    """把数据库值安全转换为有限 float；对 NaN / ±Inf / None / 非数值返回 None。"""
+    try:
+        f = float(value)
+    except (TypeError, ValueError):
+        return None
+    return f if math.isfinite(f) else None
+
+
+def retrieve_kb(query: str, top_k: int = 5, chroma_path: str = None) -> dict:
+    """
+    独立 RAG 检索核心：读取 docs/policy.txt，用字符级 n-gram TF-IDF 向量化后从本地
+    ChromaDB 检索 Top-K 片段，返回结构化结果（含来源文件与余弦距离）。
+
+    供 rag_search 工具与 /api/v1/kb/search 接口共用，避免两处重复实现同一套检索逻辑。
+    返回 dict:
+        source : 知识库来源文件相对路径（文件缺失时为空字符串）
+        hits   : [{text, distance}]，distance 为余弦距离（越小越相似，>=0.999 视为无交集被剔除）
+    """
+    import chromadb
+    from sklearn.feature_extraction.text import TfidfVectorizer
+
+    policy_path = os.path.join(BASE_DIR, 'docs', 'policy.txt')
+    source = os.path.relpath(policy_path, BASE_DIR).replace(os.sep, '/')
+    if not os.path.exists(policy_path):
+        return {"source": "", "hits": []}
+
+    with open(policy_path, 'r', encoding='utf-8') as f:
+        raw = f.read()
+
+    chunks = [c.strip() for c in raw.split('\n\n') if c.strip()]
+    if not chunks:
+        return {"source": source, "hits": []}
+
+    vectorizer = TfidfVectorizer(analyzer='char', ngram_range=(2, 3))
+    chunk_vectors = vectorizer.fit_transform(chunks).toarray().tolist()
+    query_vector = vectorizer.transform([query]).toarray().tolist()
+
+    if chroma_path is None:
+        chroma_path = os.path.join(BASE_DIR, 'chroma_db')
+    client = chromadb.PersistentClient(path=chroma_path)
+    try:
+        # 先删后建：语料/分词变化会导致向量维度不匹配，演示场景下每次重建以保证一致
+        try:
+            client.delete_collection(name="policy_docs")
+        except Exception:
+            pass
+        collection = client.create_collection(
+            name="policy_docs", metadata={"hnsw:space": "cosine"}
+        )
+        collection.add(
+            ids=[f"chunk_{i}" for i in range(len(chunks))],
+            documents=chunks,
+            embeddings=chunk_vectors,
+        )
+        result = collection.query(
+            query_embeddings=query_vector,
+            n_results=min(top_k, len(chunks)),
+            include=["documents", "distances"],
+        )
+        docs = result.get("documents", [[]])[0]
+        distances = result.get("distances", [[]])[0]
+    finally:
+        client.close()
+
+    hits = []
+    for doc, dist in zip(docs, distances):
+        if doc and dist is not None and float(dist) < 0.999:
+            hits.append({"text": doc, "distance": round(float(dist), 4)})
+    return {"source": source, "hits": hits}
 
 
 class MCPToolServer:
@@ -23,6 +96,8 @@ class MCPToolServer:
     def __init__(self):
         self.db_path = os.path.join(BASE_DIR, 'retail.db')
         self.model_path = os.path.join(BASE_DIR, 'src', 'models', 'saved_models', 'lgbm_churn_model.pkl')
+        # RAG 向量库持久化目录（测试可重定向到临时目录，避免污染真实 chroma_db）
+        self.chroma_path = os.path.join(BASE_DIR, 'chroma_db')
         # 🌟 执行明细元数据：供 Agent 报告的可解释性展示使用
         self.last_sql = ""
         self.last_data_count = 0
@@ -70,7 +145,7 @@ class MCPToolServer:
     # ------------------------------------------------------------------
     # 工具 1：宏观社零 SQL 查询
     # ------------------------------------------------------------------
-    def query_macro_sqlite(self, limit: int = 12) -> str:
+    def query_macro_sqlite(self, limit: int = 12) -> tuple:
         """
         MCP Tool: 查询宏观社零数据。
 
@@ -98,21 +173,41 @@ class MCPToolServer:
                     duration_ms=(time.perf_counter() - started) * 1000,
                     sql=sql,
                 )
-                return "宏观社零数据：数据库中暂无数据。"
+                return "宏观社零数据：数据库中暂无数据。", []
 
             self.last_sql = sql
-            self.last_data_count = len(df)
-            self.last_macro_payload = [
-                {
+            # 仅保留单月同比口径下可用的行：当月社零额与同比增速都必须是有限数值。
+            # 「1—2 月累计发布」口径的行（当月值/同比为空，如 2026-02）不适用于单月同比分析，
+            # 予以剔除；其余有效历史数据一律保留，不做无差别删除。
+            payload = []
+            for _, row in df.iterrows():
+                value = _finite_float(row['retail_sales_current'])
+                yoy = _finite_float(row['yoy_growth'])
+                if value is None or yoy is None:
+                    continue
+                payload.append({
                     "date": str(row['date'])[:7],
-                    "value": round(float(row['retail_sales_current']), 1),
-                    "yoy": round(float(row['yoy_growth']), 2),
-                }
-                for _, row in df.iterrows()
-            ]
+                    "value": round(value, 1),
+                    "yoy": round(yoy, 2),
+                })
 
-            latest = self.last_macro_payload[0]
-            recent_yoy = [p["yoy"] for p in self.last_macro_payload]
+            if not payload:
+                self.last_data_count = 0
+                self.last_macro_payload = []
+                self._record(
+                    "query_macro_sqlite", "success",
+                    "宏观社零数据查询成功，但暂无符合单月同比口径的有效数据",
+                    input_params={"limit": limit},
+                    duration_ms=(time.perf_counter() - started) * 1000,
+                    sql=sql,
+                )
+                return "宏观社零数据：暂无符合单月同比口径的有效数据。", []
+
+            self.last_data_count = len(payload)
+            self.last_macro_payload = payload
+
+            latest = payload[0]
+            recent_yoy = [p["yoy"] for p in payload]
             summary = (
                 f"最新一期 {latest['date']} 社零总额 {latest['value']} 亿元，"
                 f"同比增长 {latest['yoy']}%；近 {len(recent_yoy)} 期同比增速区间 "
@@ -120,7 +215,7 @@ class MCPToolServer:
             )
 
             lines = ["最新宏观社零数据（按月，最新在前）："]
-            for p in self.last_macro_payload:
+            for p in payload:
                 lines.append(f"- {p['date']}: 当月总额 {p['value']} 亿元, 同比增长 {p['yoy']}%")
             lines.append("")
             lines.append(f"趋势摘要：{summary}")
@@ -131,23 +226,23 @@ class MCPToolServer:
                 duration_ms=(time.perf_counter() - started) * 1000,
                 sql=sql,
             )
-            return "\n".join(lines)
+            return "\n".join(lines), payload
         except Exception as e:
             self._record(
                 "query_macro_sqlite", "failed", "宏观数据查询失败",
                 input_params={"limit": limit}, error=str(e),
                 duration_ms=(time.perf_counter() - started) * 1000, sql=sql,
             )
-            return f"宏观数据查询失败: {str(e)}"
+            return f"宏观数据查询失败: {str(e)}", []
 
     # ------------------------------------------------------------------
     # 工具 2：时序预测（ARIMA + 异常检测）
     # ------------------------------------------------------------------
-    def forecast_timeseries(self) -> str:
+    def forecast_timeseries(self) -> tuple:
         """
-        MCP Tool: 社零总额时序预测（ARIMA + 异常检测）
-        调用 src/models/train_timeseries.py 中的时序逻辑，
-        返回未来 3 个月预测值、95% 置信区间，以及历史回测 MAPE。
+        MCP Tool: 社零总额时间序列分析（历史回测 + 基线对比 + 未来预测 + 异常检测）
+        调用 src/models/train_timeseries.py 中的时序逻辑。优先返回「历史三个月回测」的
+        预测值与真实值逐月对比及误差指标，未来三个月预测作为辅助单独标注、不冒充已验证结果。
         """
         started = time.perf_counter()
         try:
@@ -156,22 +251,36 @@ class MCPToolServer:
             result = run_forecast(steps=3, test_months=3, order=(1, 1, 1))
             self.last_forecast_payload = result
 
-            metrics = result['metrics']
+            bt = result['backtest']
+            metrics = bt['metrics']
+            bl = bt['baselines']
             lines = [
-                "===== 社零总额 ARIMA 时序预测报告 =====",
-                f"未来 {len(result['forecast_dates'])} 个月预测（95% 置信区间）：",
+                "===== 社零总额时间序列分析报告 =====",
+                f"统计口径：{result.get('data_note', '')}",
+                "",
+                f"【历史回测】训练数据截止 {bt['train_end']}，回测月份 {bt['test_months']}：",
             ]
+            for p in bt['points']:
+                lines.append(
+                    f"- {p['date']}：预测 {p['forecast']} 亿元，真实 {p['actual']} 亿元，"
+                    f"绝对误差 {p['abs_error']} 亿元，相对误差 {p['rel_error_pct']}%，"
+                    f"95% 区间 [{p['lower']}, {p['upper']}]"
+                )
+            lines.append(
+                f"- ARIMA 回测指标：MAE={metrics['mae']} 亿元，RMSE={metrics['rmse']} 亿元，"
+                f"MAPE={metrics['mape']}%"
+            )
+            lines.append(
+                f"- 基线对比：沿用上月值 MAPE={bl['naive']['mape']}%，"
+                f"同月去年 MAPE={bl['seasonal']['mape']}%"
+            )
+            lines.append("")
+            lines.append("【未来 3 个月预测】（辅助，未经真实值验证，不构成准确率保证）：")
             for d, v, lo, hi in zip(
                 result['forecast_dates'], result['forecast_values'],
                 result['lower_bound'], result['upper_bound']
             ):
                 lines.append(f"  {d}: 预测 {v} 亿元，区间 [{lo}, {hi}]")
-
-            lines.append("")
-            lines.append(
-                f"历史回测指标：MAE={metrics['mae']} 亿元, "
-                f"RMSE={metrics['rmse']} 亿元, MAPE={metrics['mape']}%"
-            )
 
             lines.append("")
             lines.append(f"异常检测：共标记 {len(result['anomalies'])} 个异常月份")
@@ -180,24 +289,25 @@ class MCPToolServer:
 
             self._record(
                 "forecast_timeseries", "success",
-                f"ARIMA(1,1,1) 预测未来 {len(result['forecast_dates'])} 个月，"
-                f"回测 MAPE={metrics['mape']}%，标记 {len(result['anomalies'])} 个异常月份",
+                f"历史回测 MAPE={metrics['mape']}%（回测 {bt['test_months']}，"
+                f"同月去年基线 MAPE={bl['seasonal']['mape']}%），"
+                f"未来预测 {len(result['forecast_dates'])} 个月（辅助，未验证）",
                 input_params={"steps": 3, "test_months": 3, "order": "(1,1,1)"},
                 duration_ms=(time.perf_counter() - started) * 1000,
             )
-            return "\n".join(lines)
+            return "\n".join(lines), result
         except Exception as e:
             self._record(
                 "forecast_timeseries", "failed", "时序预测失败",
                 input_params={"steps": 3, "test_months": 3}, error=str(e),
                 duration_ms=(time.perf_counter() - started) * 1000,
             )
-            return f"时序预测失败（已优雅降级）: {str(e)}"
+            return f"时序预测失败（已优雅降级）: {str(e)}", None
 
     # ------------------------------------------------------------------
     # 工具 3：用户流失批量预测（真实模型推理）
     # ------------------------------------------------------------------
-    def predict_churn_batch(self, top_n: int = 20) -> str:
+    def predict_churn_batch(self, top_n: int = 20) -> tuple:
         """
         MCP Tool: 对真实（模拟）流失数据集执行 LightGBM 批量推理。
 
@@ -215,7 +325,7 @@ class MCPToolServer:
                     input_params={"top_n": top_n},
                     duration_ms=(time.perf_counter() - started) * 1000,
                 )
-                return f"流失预测失败: {result['error']}"
+                return f"流失预测失败: {result['error']}", None
 
             self.last_churn_payload = result
 
@@ -238,7 +348,7 @@ class MCPToolServer:
             for d in result["risk_distribution"]:
                 lines.append(f"  {d['level']}: {d['count']} 人（{d['ratio'] * 100:.1f}%）")
             lines.append("")
-            lines.append("Top3 影响特征（SHAP 归因）：")
+            lines.append("Top3 影响特征（平均绝对 SHAP 值，模型解释指标，非百分比）：")
             for f in result["feature_importance"][:3]:
                 lines.append(f"  {f['feature']}: {f['importance']}")
             lines.append("")
@@ -254,14 +364,14 @@ class MCPToolServer:
                 input_params={"top_n": top_n},
                 duration_ms=(time.perf_counter() - started) * 1000,
             )
-            return "\n".join(lines)
+            return "\n".join(lines), result
         except Exception as e:
             self._record(
                 "predict_churn_batch", "failed", "流失批量预测失败",
                 input_params={"top_n": top_n}, error=str(e),
                 duration_ms=(time.perf_counter() - started) * 1000,
             )
-            return f"流失预测失败: {str(e)}"
+            return f"流失预测失败: {str(e)}", None
 
     # ------------------------------------------------------------------
     # 工具 4：单用户流失预测（保留，特征顺序改用模型 feature_names_in_）
@@ -317,108 +427,52 @@ class MCPToolServer:
     # ------------------------------------------------------------------
     # 工具 5：RAG 知识库检索
     # ------------------------------------------------------------------
-    def rag_search(self, query: str, top_k: int = 2) -> str:
+    def rag_search(self, query: str, top_k: int = 2) -> tuple:
         """
         MCP Tool: RAG 检索企业知识库（基于 ChromaDB 本地向量检索）
 
-        流程:
-          1. 读取本地 docs/policy.txt（政策/研报原文）
-          2. 按空行分块，使用 TF-IDF 向量化（离线、无外部模型依赖）
-          3. 写入本地持久化 ChromaDB（PersistentClient，余弦相似度）
-          4. 对 query 做同空间向量化并检索 top_k 最相似片段
-          5. 返回真实原文片段；无匹配则明确返回「未在知识库中找到相关研报」
+        复用 retrieve_kb() 完成「读取 → 分块 → TF-IDF 向量化 → ChromaDB 检索」，
+        返回真实原文片段；无匹配则明确返回「未在知识库中找到相关研报」。
         """
         started = time.perf_counter()
         try:
-            import chromadb
-            from sklearn.feature_extraction.text import TfidfVectorizer
-
-            # 1. 读取本地知识库原文，文件缺失则视为「无知识库」
-            policy_path = os.path.join(BASE_DIR, 'docs', 'policy.txt')
-            if not os.path.exists(policy_path):
+            result = retrieve_kb(query, top_k=top_k, chroma_path=self.chroma_path)
+            if not result.get("source"):
+                # 知识库文件缺失，视为「未接入」，不伪造内容
                 self.last_kb_fragments = ""
                 self._record(
                     "rag_search", "not_configured", "知识库文件缺失，未检索到内容",
                     input_params={"query": query, "top_k": top_k},
                     duration_ms=(time.perf_counter() - started) * 1000,
                 )
-                return "未在知识库中找到相关研报"
+                return "未在知识库中找到相关研报", ""
 
-            with open(policy_path, 'r', encoding='utf-8') as f:
-                raw = f.read()
-
-            # 2. 按空行分块，剔除空白块
-            chunks = [c.strip() for c in raw.split('\n\n') if c.strip()]
-            if not chunks:
-                self.last_kb_fragments = ""
-                self._record(
-                    "rag_search", "not_configured", "知识库为空，未检索到内容",
-                    input_params={"query": query, "top_k": top_k},
-                    duration_ms=(time.perf_counter() - started) * 1000,
-                )
-                return "未在知识库中找到相关研报"
-
-            # 3. TF-IDF 向量化：以文档块为语料拟合，query 用同一向量器变换，保证同维度同空间
-            vectorizer = TfidfVectorizer(analyzer='char', ngram_range=(2, 3))
-            chunk_vectors = vectorizer.fit_transform(chunks).toarray().tolist()
-            query_vector = vectorizer.transform([query]).toarray().tolist()
-
-            # 4. 本地持久化向量库（先删后建，避免语料/分词变化导致向量维度不匹配）
-            chroma_path = os.path.join(BASE_DIR, 'chroma_db')
-            client = chromadb.PersistentClient(path=chroma_path)
-            try:
-                client.delete_collection(name="policy_docs")
-            except Exception:
-                pass  # 集合不存在时忽略
-            collection = client.create_collection(
-                name="policy_docs",
-                metadata={"hnsw:space": "cosine"},
-            )
-            collection.add(
-                ids=[f"chunk_{i}" for i in range(len(chunks))],
-                documents=chunks,
-                embeddings=chunk_vectors,
-            )
-
-            # 5. 检索 top_k 最相似片段
-            result = collection.query(
-                query_embeddings=query_vector,
-                n_results=min(top_k, len(chunks)),
-                include=["documents", "distances"],
-            )
-            docs = result.get("documents", [[]])[0]
-            distances = result.get("distances", [[]])[0]
-
-            # 6. 过滤低相关结果：cosine 距离 >= 0.999 视为无交集
-            matched = [
-                d for d, dist in zip(docs, distances)
-                if d and dist is not None and dist < 0.999
-            ]
-            if not matched:
+            hits = result.get("hits", [])
+            if not hits:
                 self.last_kb_fragments = ""
                 self._record(
                     "rag_search", "success", "知识库检索完成，未命中相关片段",
                     input_params={"query": query, "top_k": top_k},
                     duration_ms=(time.perf_counter() - started) * 1000,
                 )
-                return "未在知识库中找到相关研报"
+                return "未在知识库中找到相关研报", ""
 
-            fragments = "\n\n".join(matched)
+            fragments = "\n\n".join(h["text"] for h in hits)
             self.last_kb_fragments = fragments
             self._record(
-                "rag_search", "success", f"命中 {len(matched)} 条知识库片段",
+                "rag_search", "success", f"命中 {len(hits)} 条知识库片段",
                 input_params={"query": query, "top_k": top_k},
                 duration_ms=(time.perf_counter() - started) * 1000,
-                source=os.path.relpath(policy_path, BASE_DIR),
+                source=result.get("source", ""),
             )
-            return "【企业知识库检索结果】\n" + fragments
+            return "【企业知识库检索结果】\n" + fragments, fragments
         except Exception as e:
             self._record(
                 "rag_search", "failed", "知识库检索失败（已优雅降级）",
                 input_params={"query": query, "top_k": top_k}, error=str(e),
                 duration_ms=(time.perf_counter() - started) * 1000,
             )
-            return f"知识库检索失败（已优雅降级）: {str(e)}"
+            return f"知识库检索失败（已优雅降级）: {str(e)}", ""
 
     # ------------------------------------------------------------------
     # 工具 6：A/B 测试统计检验（保持原样，当前未接入工作流）
