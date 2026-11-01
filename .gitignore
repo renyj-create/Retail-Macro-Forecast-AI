@@ -24,3 +24,25 @@ src/data_pipeline/data/
 chroma_db/
 evals/traces/
 *.bak*
+
+# Coding Agent 评测（Coder Eval）运行产物
+coding_agent_eval/runs/
+coding_agent_eval/logs/
+
+# Local environment variants (the public template stays visible)
+.env.*
+!.env.example
+/.claude/settings.local.json
+
+# Known local SQLite database sidecars; do not ignore arbitrary *.db files
+/retail.db-wal
+/retail.db-shm
+/retail.db-journal
+
+# Reviewed historical acceptance/runtime directories; curated copies live in docs/acceptance/
+/artifacts/final_special_acceptance_20261101/
+/artifacts/graph_final_acceptance_20261101/
+/artifacts/graph_multimodal_acceptance_20261101/
+/artifacts/graph_upgrade_20261101/
+/artifacts/runtime_browser_final_20261101/
+/artifacts/git_preparation_20261101/
