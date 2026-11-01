@@ -1,0 +1,12 @@
+[
+  {
+    "kind": "network",
+    "error": "net::ERR_INTERNET_DISCONNECTED",
+    "url": "http://127.0.0.1:8003/api/v1/multimodal/analyze"
+  },
+  {
+    "kind": "network",
+    "error": "net::ERR_INTERNET_DISCONNECTED",
+    "url": "http://127.0.0.1:8003/api/v1/graph/query"
+  }
+]

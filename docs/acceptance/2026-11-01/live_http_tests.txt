@@ -1,0 +1,11 @@
+test_caps (__main__.LiveTests) ... ok
+test_catalog (__main__.LiveTests) ... ok
+test_invalid (__main__.LiveTests) ... ok
+test_missing (__main__.LiveTests) ... ok
+test_multihop (__main__.LiveTests) ... ok
+test_paths (__main__.LiveTests) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.710s
+
+OK

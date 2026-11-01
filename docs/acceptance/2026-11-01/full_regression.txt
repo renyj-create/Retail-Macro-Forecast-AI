@@ -1,0 +1,173 @@
+test_01_rule_based_intent (test_agent.TestAgent)
+规则意图识别（大模型不可用时的兜底）应正确覆盖三类问题。 ... ok
+test_02_fallback_report (test_agent.TestAgent)
+模板兜底报告应包含六段式结构，且内容来自真实工具结果。 ... ok
+test_03_query_macro_sqlite (test_agent.TestAgent)
+SQL 查询工具：在临时数据库上验证真实 SQL 逻辑与结构化 payload。 ... ok
+test_04_predict_churn_batch (test_agent.TestAgent)
+真实批量流失推理：应返回风险分布、特征归因与高风险用户。 ... ok
+test_05_parse_report_sections (test_agent.TestAgent)
+六段式报告解析器应正确提取标题与内容。 ... ok
+test_01_health (test_api.TestAPI) ... ok
+test_02_forecast (test_api.TestAPI) ... ok
+test_03_churn_predict (test_api.TestAPI) ... ok
+test_04_churn_recall (test_api.TestAPI) ... ok
+test_05_churn_recall_empty (test_api.TestAPI) ... ok
+test_06_analyze (test_api.TestAPI) ... ok
+test_07_analyze_empty_query (test_api.TestAPI) ... ok
+test_08_overview (test_api.TestAPI) ... ok
+test_09_analyze_report_persist_failure (test_api.TestAPI)
+报告持久化失败时，接口仍正常返回报告，并明确标记 report_persisted=False。 ... ok
+test_auth_failure_classified (test_config.TestDeepSeekConfig)
+401 鉴权失败应归类为「API Key 无效或鉴权失败」。 ... ok
+test_missing_api_key_classified_as_not_configured (test_config.TestDeepSeekConfig)
+缺少密钥类异常应归类为「未配置 API Key」，供前端如实展示。 ... ok
+test_missing_api_key_raises_clear_error (test_config.TestDeepSeekConfig)
+client 为 None（未配置 DEEPSEEK_API_KEY）时，_llm_chat 应抛出明确错误。 ... ok
+test_module_reads_deepseek_env_vars (test_config.TestDeepSeekConfig)
+配置项必须来自 DeepSeek 环境变量，而非旧 DashScope/Qwen 变量。 ... ok
+test_no_dashscope_residual_in_module_source (test_config.TestDeepSeekConfig)
+graph_workflow.py 源码中不应残留 DashScope/Qwen 强依赖。 ... ok
+test_node_error_is_recorded_once_as_node_failure (test_evaluation.TestCallbackCollector) ... ok
+test_node_graph_runnable_and_tool_events (test_evaluation.TestCallbackCollector) ... ok
+test_cli_chroma_dir_override_is_honored (test_evaluation.TestCliIsolation) ... ok
+test_cli_default_chroma_is_isolated_and_restored (test_evaluation.TestCliIsolation) ... ok
+test_cli_refuses_when_chroma_dir_is_real (test_evaluation.TestCliIsolation) ... ok
+test_resolve_chroma_dir_refuses_real_chroma (test_evaluation.TestCliIsolation) ... ok
+test_resolve_chroma_dir_returns_isolated_absolute_path (test_evaluation.TestCliIsolation) ... ok
+test_real_workflow_real_tools_offline (test_evaluation.TestEndToEndOffline) ... ok
+test_missing_duplicate_and_out_of_order_titles_fail (test_evaluation.TestGates) ... ok
+test_recursive_redaction_and_truncation (test_evaluation.TestGates) ... ok
+test_truncation_limits_long_text_and_lists (test_evaluation.TestGates) ... ok
+test_actual_workflow_callback_boundary_and_three_paths (test_evaluation.TestOfflineRunner) ... ok
+test_business_fallback_is_separate_from_evaluation_status (test_evaluation.TestOfflineRunner) ... ok
+test_concurrent_runs_have_isolated_traces (test_evaluation.TestOfflineRunner) ... ok
+test_gate_and_trace_writer_errors_do_not_change_business_result (test_evaluation.TestOfflineRunner) ... ok
+test_serial_runs_have_unique_isolated_trace_files (test_evaluation.TestOfflineRunner) ... ok
+test_state_projection_allowlist (test_evaluation.TestOfflineRunner) ... ok
+test_tool_call_record_allowlist (test_evaluation.TestOfflineRunner) ... ok
+test_write_trace_cleans_tmp_on_failure (test_evaluation.TestOfflineRunner) ... ok
+test_write_trace_leaves_no_tmp_files (test_evaluation.TestOfflineRunner) ... ok
+test_city_tier_mismatch (test_fact_check.TestChurnUserFields) ... ok
+test_collect_facts_from_payload (test_fact_check.TestChurnUserFields) ... ok
+test_correct_report_passes (test_fact_check.TestChurnUserFields) ... ok
+test_empty_facts_skipped (test_fact_check.TestChurnUserFields) ... ok
+test_numeric_field_mismatch (test_fact_check.TestChurnUserFields) ... ok
+test_user_id_field_mismap (test_fact_check.TestChurnUserFields) ... ok
+test_check_all_hit_ok (test_fact_check.TestFactAnchors) ... ok
+test_check_all_missing_warning (test_fact_check.TestFactAnchors) ... ok
+test_check_no_anchors_skipped (test_fact_check.TestFactAnchors) ... ok
+test_check_partial_missing_warning (test_fact_check.TestFactAnchors) ... ok
+test_collect_anchors_empty_payloads (test_fact_check.TestFactAnchors) ... ok
+test_collect_anchors_from_payloads (test_fact_check.TestFactAnchors) ... ok
+test_fallback_skipped (test_fact_check.TestGenerateReportFactCheck) ... ok
+test_intent_node_passes_kb_fragments_from_return (test_fact_check.TestGenerateReportFactCheck) ... ok
+test_kb_fragments_from_state (test_fact_check.TestGenerateReportFactCheck) ... ok
+test_success_all_anchors_present (test_fact_check.TestGenerateReportFactCheck) ... ok
+test_uses_state_payloads_not_singleton (test_fact_check.TestGenerateReportFactCheck) ... ok
+test_user_field_consistent_no_note (test_fact_check.TestGenerateReportUserFieldNote) ... ok
+test_user_field_mismatch_appends_note (test_fact_check.TestGenerateReportUserFieldNote) ... ok
+test_caps_and_dedup (test_graph_multihop.MultihopTests) ... ok
+test_error_classification_redacts_message (test_graph_multihop.MultihopTests) ... ok
+test_managed_transaction_timeout_and_plain_query (test_graph_multihop.MultihopTests) ... ok
+test_relationship_projection (test_graph_multihop.MultihopTests) ... ok
+test_templates (test_graph_multihop.MultihopTests) ... ok
+test_validation (test_graph_multihop.MultihopTests) ... ok
+test_api_states_and_validation (test_knowledge_graph.GraphTests) ... ok
+test_dataset_provenance (test_knowledge_graph.GraphTests) ... ok
+test_import_uses_merge_and_rejects_invalid (test_knowledge_graph.GraphTests) ... ok
+test_invalid_contract (test_knowledge_graph.GraphTests) ... ok
+test_read_mode_and_templates (test_knowledge_graph.GraphTests) ... ok
+test_unknown_and_truncated (test_knowledge_graph.GraphTests) ... ok
+test_read_only_multihop (test_knowledge_graph.RealNeo4jTests) ... skipped 'Neo4j integration not enabled; not a passing integration result'
+test_nan_inf_none_non_numeric (test_macro_nan.TestFiniteFloat) ... ok
+test_valid_numbers (test_macro_nan.TestFiniteFloat) ... ok
+test_all_records_invalid_returns_no_data (test_macro_nan.TestQueryMacroNan)
+全部记录无效时应稳定返回「暂无有效数据」，不崩溃、不伪造数字。 ... ok
+test_filters_cumulative_missing_rows (test_macro_nan.TestQueryMacroNan)
+2026-02 这类累计口径缺失行应被剔除，其余有效历史数据保留。 ... ok
+test_duplicate_unknown (test_multimodal.TestExtraction) ... ok
+test_invalid_json_schema (test_multimodal.TestExtraction) ... ok
+test_invalid_values (test_multimodal.TestExtraction) ... ok
+test_missing_not_zero (test_multimodal.TestExtraction) ... ok
+test_mock_real_distinction (test_multimodal.TestExtraction) ... ok
+test_no_configuration (test_multimodal.TestExtraction) ... ok
+test_sdk_adapter_request_without_network (test_multimodal.TestExtraction) ... ok
+test_service_failure_redacted (test_multimodal.TestExtraction) ... ok
+test_timeout (test_multimodal.TestExtraction) ... ok
+test_corrupt (test_multimodal.TestImages) ... ok
+test_metadata_removed (test_multimodal.TestImages) ... ok
+test_mismatch (test_multimodal.TestImages) ... ok
+test_pixels (test_multimodal.TestImages) ... ok
+test_png_jpeg (test_multimodal.TestImages) ... ok
+test_size (test_multimodal.TestImages) ... ok
+test_transparency_composited_white (test_multimodal.TestImages) ... ok
+test_unsupported (test_multimodal.TestImages) ... ok
+test_api_invalid_image (test_multimodal.TestMultimodalAPI) ... ok
+test_api_mismatch (test_multimodal.TestMultimodalAPI) ... ok
+test_api_mock (test_multimodal.TestMultimodalAPI) ... ok
+test_api_model_failures (test_multimodal.TestMultimodalAPI) ... ok
+test_api_over_file_limit (test_multimodal.TestMultimodalAPI) ... ok
+test_chunked_body_stops_early (test_multimodal.TestMultimodalAPI) ... ok
+test_existing_api_registration (test_multimodal.TestMultimodalAPI) ... ok
+test_missing_question (test_multimodal.TestMultimodalAPI) ... ok
+test_multipart_not_configured (test_multimodal.TestMultimodalAPI) ... ok
+test_all_invalid_returns_empty_state (test_overview.TestOverviewRobustness) ... ok
+test_finite_float_handles_invalid (test_overview.TestOverviewRobustness) ... ok
+test_latest_invalid_skips_to_valid (test_overview.TestOverviewRobustness) ... ok
+test_normal_data_returns_latest_valid (test_overview.TestOverviewRobustness) ... ok
+test_response_json_serializable_no_nan_inf (test_overview.TestOverviewRobustness) ... ok
+test_init_does_not_touch_existing_tables (test_report_store.TestReportStore) ... ok
+test_init_report_table_is_idempotent (test_report_store.TestReportStore) ... ok
+test_new_report_id_is_unique (test_report_store.TestReportStore) ... ok
+test_save_report_persists_row (test_report_store.TestReportStore) ... ok
+test_extract_malformed_json_returns_empty_but_strips (test_suggestions.TestExtractSuggestions) ... ok
+test_extract_no_block_returns_empty (test_suggestions.TestExtractSuggestions) ... ok
+test_extract_valid_block (test_suggestions.TestExtractSuggestions) ... ok
+test_generate_report_autofills_missing_disclaimer (test_suggestions.TestGenerateReportIntegration) ... ok
+test_generate_report_fallback_has_no_suggestions (test_suggestions.TestGenerateReportIntegration) ... ok
+test_generate_report_malformed_suggestions_keeps_report (test_suggestions.TestGenerateReportIntegration) ... ok
+test_generate_report_missing_core_section_falls_back (test_suggestions.TestGenerateReportIntegration) ... ok
+test_generate_report_parses_suggestions (test_suggestions.TestGenerateReportIntegration) ... ok
+test_caps_at_five (test_suggestions.TestNormalizeSuggestions) ... ok
+test_empty_suggestions_dropped (test_suggestions.TestNormalizeSuggestions) ... ok
+test_invalid_priority_falls_back_to_normal (test_suggestions.TestNormalizeSuggestions) ... ok
+test_missing_keys_get_defaults (test_suggestions.TestNormalizeSuggestions) ... ok
+test_non_list_returns_empty (test_suggestions.TestNormalizeSuggestions) ... ok
+test_backtest_no_data_leakage (test_timeseries.TestBacktest) ... ok
+test_backtest_points_and_metrics (test_timeseries.TestBacktest) ... ok
+test_backtest_window_is_contiguous (test_timeseries.TestBacktest) ... ok
+test_naive_baseline_repeats_last_train_value (test_timeseries.TestBaselines) ... ok
+test_seasonal_baseline_uses_same_month_last_year_only (test_timeseries.TestBaselines) ... ok
+test_expanding_backtest_runs_and_aggregates (test_timeseries.TestExpandingBacktest) ... ok
+test_metrics_hand_computed (test_timeseries.TestMetrics) ... ok
+test_metrics_never_treat_nan_as_zero (test_timeseries.TestMetrics) ... ok
+test_metrics_zero_actual_excluded_from_mape (test_timeseries.TestMetrics) ... ok
+test_contiguous_window_skips_feb_gap (test_timeseries.TestMissingValuesAndCaliber) ... ok
+test_describe_publication_calendar_detects_cumulative (test_timeseries.TestMissingValuesAndCaliber) ... ok
+test_monthly_series_drops_feb_nan_without_imputation (test_timeseries.TestMissingValuesAndCaliber) ... ok
+test_01_macro_intent_routes_to_macro_and_forecast (test_workflow.TestWorkflow)
+宏观分析意图：应执行 SQL 查询 + 时序预测，不执行流失预测。 ... ok
+test_02_churn_intent_routes_to_batch_inference (test_workflow.TestWorkflow)
+流失预测意图：应执行批量流失推理，不执行宏观/时序预测。 ... ok
+test_03_comprehensive_intent_routes_to_all_tools (test_workflow.TestWorkflow)
+综合分析意图：应组合宏观 + 时序预测 + 流失批量推理。 ... ok
+test_04_fallback_report_generation (test_workflow.TestWorkflow)
+大模型不可用时，报告应降级为模板兜底并如实标注状态。 ... ok
+test_05_execution_trace_complete (test_workflow.TestWorkflow)
+执行追踪应包含意图识别与报告生成两个节点，且所有工具状态明确。 ... ok
+test_06_macro_question_not_misrouted_to_churn (test_workflow.TestWorkflow)
+宏观单域问题即使大模型误判为综合分析，也不应调用流失预测。 ... ok
+test_07_churn_question_not_misrouted_to_macro (test_workflow.TestWorkflow)
+流失单域问题即使大模型误判为综合分析，也应只调用流失预测。 ... ok
+test_08_trend_question_calls_forecast (test_workflow.TestWorkflow)
+宏观趋势问题应调用时序预测能力，不调用流失预测。 ... ok
+test_09_comprehensive_question_still_runs_all (test_workflow.TestWorkflow)
+双域综合问题信任大模型综合分析，仍编排全部相关工具。 ... ok
+test_10_reconcile_intent (test_workflow.TestWorkflow)
+_reconcile_intent：单域问题用规则结果，双域/无关键词信任大模型。 ... ok
+
+----------------------------------------------------------------------
+Ran 145 tests in 11.557s
+
+OK (skipped=1)

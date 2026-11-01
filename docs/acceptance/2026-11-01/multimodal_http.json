@@ -1,0 +1,131 @@
+[
+  {
+    "file": "valid.png",
+    "status": 200,
+    "expected": 200,
+    "passed": true,
+    "response": {
+      "task_id": "95c6503432c64411a60e1508813e844d",
+      "status": "not_configured",
+      "error_code": "vision_not_configured",
+      "message": "视觉模型未配置，未执行识别",
+      "document_type": null,
+      "provider": "none",
+      "is_mock": false,
+      "fields": [],
+      "issues": [],
+      "evidence": {
+        "evidence_id": "ba9592bf783c4a50a7768eae3267d0dd",
+        "source_type": "image_extraction",
+        "data_nature": "user_uploaded_unverified",
+        "source_sha256": "8019943bd82a5984b2b8adcdcf16f545051757437f695fa870d9200f4dc70dba",
+        "verification": "unverified"
+      },
+      "report": "",
+      "report_status": "unavailable"
+    },
+    "elapsed_ms": 5108.5
+  },
+  {
+    "file": "valid.jpg",
+    "status": 200,
+    "expected": 200,
+    "passed": true,
+    "response": {
+      "task_id": "3c93285d7f7b45b49b1cb3b4ca968c0e",
+      "status": "not_configured",
+      "error_code": "vision_not_configured",
+      "message": "视觉模型未配置，未执行识别",
+      "document_type": null,
+      "provider": "none",
+      "is_mock": false,
+      "fields": [],
+      "issues": [],
+      "evidence": {
+        "evidence_id": "3d1807bc64f34ca4aab57949e01a9432",
+        "source_type": "image_extraction",
+        "data_nature": "user_uploaded_unverified",
+        "source_sha256": "8019943bd82a5984b2b8adcdcf16f545051757437f695fa870d9200f4dc70dba",
+        "verification": "unverified"
+      },
+      "report": "",
+      "report_status": "unavailable"
+    },
+    "elapsed_ms": 17.9
+  },
+  {
+    "file": "broken.png",
+    "status": 422,
+    "expected": 422,
+    "passed": true,
+    "response": {
+      "status": "failed",
+      "error_code": "decode_failed",
+      "message": "图片损坏或无法解码"
+    },
+    "elapsed_ms": 81.2
+  },
+  {
+    "file": "wrong.txt",
+    "status": 415,
+    "expected": 415,
+    "passed": true,
+    "response": {
+      "status": "failed",
+      "error_code": "unsupported_type",
+      "message": "仅支持 PNG/JPEG"
+    },
+    "elapsed_ms": 3.0
+  },
+  {
+    "file": "large.png",
+    "status": 413,
+    "expected": 413,
+    "passed": true,
+    "response": {
+      "status": "failed",
+      "error_code": "file_too_large",
+      "message": "图片不能超过 5 MiB"
+    },
+    "elapsed_ms": 90.2
+  },
+  {
+    "file": "pixels.png",
+    "status": 413,
+    "expected": 413,
+    "passed": true,
+    "response": {
+      "status": "failed",
+      "error_code": "pixel_limit",
+      "message": "图片像素总量超过 1600 万"
+    },
+    "elapsed_ms": 15.4
+  },
+  {
+    "file": "valid.png",
+    "status": 200,
+    "expected": 200,
+    "passed": true,
+    "response": {
+      "task_id": "9688c89163814df8b8ea2f2e2c2d11dc",
+      "status": "not_configured",
+      "error_code": "vision_not_configured",
+      "message": "视觉模型未配置，未执行识别",
+      "document_type": null,
+      "provider": "none",
+      "is_mock": false,
+      "fields": [],
+      "issues": [],
+      "evidence": {
+        "evidence_id": "eabdfa4c998149b3bdf24af788332061",
+        "source_type": "image_extraction",
+        "data_nature": "user_uploaded_unverified",
+        "source_sha256": "8019943bd82a5984b2b8adcdcf16f545051757437f695fa870d9200f4dc70dba",
+        "verification": "unverified"
+      },
+      "report": "",
+      "report_status": "unavailable"
+    },
+    "elapsed_ms": 16.4
+  }
+]

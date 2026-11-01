@@ -1,0 +1,10 @@
+[
+  {
+    "node": "C001",
+    "properties": "节点属性\nentity_type\nCategory\ndataset_id\nretail_demo_v1\nname\n模拟食品\nis_simulated\ntrue\nid\nC001"
+  },
+  {
+    "zoomBefore": 1,
+    "zoomAfter": 1.1
+  }
+]

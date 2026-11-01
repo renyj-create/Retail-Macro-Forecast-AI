@@ -1,0 +1,1883 @@
+[
+  {
+    "path": "/api/v1/graph/query",
+    "request": {
+      "query_type": "three_hop",
+      "entity_id": "P001",
+      "max_nodes": 1
+    },
+    "status": 200,
+    "response": {
+      "status": "success",
+      "dataset_id": "retail_demo_v1",
+      "is_simulated": true,
+      "source_type": "graph_query",
+      "data_nature": "simulated",
+      "data": {
+        "nodes": [
+          {
+            "entity_type": "Product",
+            "dataset_id": "retail_demo_v1",
+            "name": "模拟燕麦",
+            "is_simulated": true,
+            "id": "P001"
+          }
+        ],
+        "edges": [],
+        "relationships": [],
+        "paths": [],
+        "hop_count": 0,
+        "source": "neo4j",
+        "dataset_id": "retail_demo_v1",
+        "is_simulated": true,
+        "truncated": true,
+        "entity_found": true
+      }
+    },
+    "elapsed_ms": 67.0
+  },
+  {
+    "path": "/api/v1/graph/query",
+    "request": {
+      "query_type": "three_hop",
+      "entity_id": "P001",
+      "max_relationships": 1
+    },
+    "status": 200,
+    "response": {
+      "status": "success",
+      "dataset_id": "retail_demo_v1",
+      "is_simulated": true,
+      "source_type": "graph_query",
+      "data_nature": "simulated",
+      "data": {
+        "nodes": [
+          {
+            "entity_type": "Product",
+            "dataset_id": "retail_demo_v1",
+            "name": "模拟燕麦",
+            "is_simulated": true,
+            "id": "P001"
+          },
+          {
+            "entity_type": "Category",
+            "dataset_id": "retail_demo_v1",
+            "name": "模拟食品",
+            "is_simulated": true,
+            "id": "C001"
+          }
+        ],
+        "edges": [
+          {
+            "source": "P001",
+            "target": "C001",
+            "relation": "BELONGS_TO",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R001"
+          }
+        ],
+        "relationships": [
+          {
+            "source": "P001",
+            "target": "C001",
+            "relation": "BELONGS_TO",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R001"
+          }
+        ],
+        "paths": [
+          {
+            "node_ids": [
+              "P001",
+              "C001"
+            ],
+            "relationship_ids": [
+              "R001"
+            ],
+            "hop_count": 1
+          }
+        ],
+        "hop_count": 1,
+        "source": "neo4j",
+        "dataset_id": "retail_demo_v1",
+        "is_simulated": true,
+        "truncated": true,
+        "entity_found": true
+      }
+    },
+    "elapsed_ms": 34.3
+  },
+  {
+    "path": "/api/v1/graph/entities",
+    "request": null,
+    "status": 200,
+    "response": {
+      "status": "success",
+      "dataset_id": "retail_demo_v1",
+      "is_simulated": true,
+      "source_type": "graph_query",
+      "data_nature": "simulated",
+      "data": {
+        "nodes": [
+          {
+            "entity_type": "Category",
+            "dataset_id": "retail_demo_v1",
+            "name": "模拟食品",
+            "is_simulated": true,
+            "id": "C001"
+          },
+          {
+            "entity_type": "Promotion",
+            "dataset_id": "retail_demo_v1",
+            "name": "模拟秋季活动",
+            "is_simulated": true,
+            "id": "M001"
+          },
+          {
+            "entity_type": "Product",
+            "dataset_id": "retail_demo_v1",
+            "name": "模拟燕麦",
+            "is_simulated": true,
+            "id": "P001"
+          },
+          {
+            "entity_type": "Product",
+            "dataset_id": "retail_demo_v1",
+            "name": "模拟牛奶",
+            "is_simulated": true,
+            "id": "P002"
+          },
+          {
+            "entity_type": "Supplier",
+            "dataset_id": "retail_demo_v1",
+            "name": "模拟供应商甲",
+            "is_simulated": true,
+            "id": "S001"
+          },
+          {
+            "entity_type": "Store",
+            "dataset_id": "retail_demo_v1",
+            "name": "模拟门店一",
+            "is_simulated": true,
+            "id": "T001"
+          }
+        ],
+        "edges": [],
+        "truncated": false
+      }
+    },
+    "elapsed_ms": 34.3
+  },
+  {
+    "path": "/api/v1/graph/query",
+    "request": {
+      "query_type": "two_hop",
+      "entity_id": "T001",
+      "max_hops": 0
+    },
+    "status": 422,
+    "response": {
+      "detail": [
+        {
+          "type": "greater_than_equal",
+          "loc": [
+            "body",
+            "max_hops"
+          ],
+          "msg": "Input should be greater than or equal to 1",
+          "input": 0,
+          "ctx": {
+            "ge": 1
+          }
+        }
+      ]
+    },
+    "elapsed_ms": 17.0
+  },
+  {
+    "path": "/api/v1/graph/query",
+    "request": {
+      "query_type": "two_hop",
+      "entity_id": "T001",
+      "max_hops": 4
+    },
+    "status": 422,
+    "response": {
+      "detail": [
+        {
+          "type": "less_than_equal",
+          "loc": [
+            "body",
+            "max_hops"
+          ],
+          "msg": "Input should be less than or equal to 3",
+          "input": 4,
+          "ctx": {
+            "le": 3
+          }
+        }
+      ]
+    },
+    "elapsed_ms": 16.2
+  },
+  {
+    "path": "/api/v1/graph/query",
+    "request": {
+      "query_type": "MATCH (n)",
+      "entity_id": "T001"
+    },
+    "status": 422,
+    "response": {
+      "detail": [
+        {
+          "type": "enum",
+          "loc": [
+            "body",
+            "query_type"
+          ],
+          "msg": "Input should be 'product_category', 'product_suppliers', 'store_products', 'promotion_details', 'one_hop', 'two_hop', 'three_hop' or 'path'",
+          "input": "MATCH (n)",
+          "ctx": {
+            "expected": "'product_category', 'product_suppliers', 'store_products', 'promotion_details', 'one_hop', 'two_hop', 'three_hop' or 'path'"
+          }
+        }
+      ]
+    },
+    "elapsed_ms": 16.7
+  },
+  {
+    "path": "/api/v1/graph/query",
+    "request": {
+      "query_type": "two_hop",
+      "entity_id": "T001",
+      "cypher": "RETURN 1"
+    },
+    "status": 422,
+    "response": {
+      "detail": [
+        {
+          "type": "extra_forbidden",
+          "loc": [
+            "body",
+            "cypher"
+          ],
+          "msg": "Extra inputs are not permitted",
+          "input": "RETURN 1"
+        }
+      ]
+    },
+    "elapsed_ms": 14.9
+  },
+  {
+    "path": "/api/v1/graph/query",
+    "request": {
+      "query_type": "two_hop",
+      "entity_id": "T001",
+      "labels": [
+        "Unknown"
+      ]
+    },
+    "status": 422,
+    "response": {
+      "detail": [
+        {
+          "type": "literal_error",
+          "loc": [
+            "body",
+            "labels",
+            0
+          ],
+          "msg": "Input should be 'Product', 'Category', 'Supplier', 'Store' or 'Promotion'",
+          "input": "Unknown",
+          "ctx": {
+            "expected": "'Product', 'Category', 'Supplier', 'Store' or 'Promotion'"
+          }
+        }
+      ]
+    },
+    "elapsed_ms": 16.2
+  },
+  {
+    "path": "/api/v1/graph/query",
+    "request": {
+      "query_type": "two_hop",
+      "entity_id": "T001",
+      "relationship_types": [
+        "DELETE"
+      ]
+    },
+    "status": 422,
+    "response": {
+      "detail": [
+        {
+          "type": "literal_error",
+          "loc": [
+            "body",
+            "relationship_types",
+            0
+          ],
+          "msg": "Input should be 'BELONGS_TO', 'SUPPLIES', 'STOCKS', 'FEATURES' or 'APPLIES_TO'",
+          "input": "DELETE",
+          "ctx": {
+            "expected": "'BELONGS_TO', 'SUPPLIES', 'STOCKS', 'FEATURES' or 'APPLIES_TO'"
+          }
+        }
+      ]
+    },
+    "elapsed_ms": 3.5
+  },
+  {
+    "path": "/api/v1/graph/query",
+    "request": {
+      "query_type": "two_hop",
+      "entity_id": "T001",
+      "max_nodes": 101
+    },
+    "status": 422,
+    "response": {
+      "detail": [
+        {
+          "type": "less_than_equal",
+          "loc": [
+            "body",
+            "max_nodes"
+          ],
+          "msg": "Input should be less than or equal to 100",
+          "input": 101,
+          "ctx": {
+            "le": 100
+          }
+        }
+      ]
+    },
+    "elapsed_ms": 28.1
+  },
+  {
+    "path": "/api/v1/graph/query",
+    "request": {
+      "query_type": "two_hop",
+      "entity_id": "T001",
+      "max_relationships": 101
+    },
+    "status": 422,
+    "response": {
+      "detail": [
+        {
+          "type": "less_than_equal",
+          "loc": [
+            "body",
+            "max_relationships"
+          ],
+          "msg": "Input should be less than or equal to 100",
+          "input": 101,
+          "ctx": {
+            "le": 100
+          }
+        }
+      ]
+    },
+    "elapsed_ms": 15.7
+  },
+  {
+    "path": "/api/v1/graph/query",
+    "request": {
+      "query_type": "one_hop",
+      "entity_id": "UNKNOWN"
+    },
+    "status": 200,
+    "response": {
+      "status": "empty",
+      "dataset_id": "retail_demo_v1",
+      "is_simulated": true,
+      "source_type": "graph_query",
+      "data_nature": "simulated",
+      "data": {
+        "nodes": [],
+        "edges": [],
+        "relationships": [],
+        "paths": [],
+        "hop_count": 0,
+        "source": "neo4j",
+        "dataset_id": "retail_demo_v1",
+        "is_simulated": true,
+        "truncated": false,
+        "entity_found": false
+      }
+    },
+    "elapsed_ms": 49.5
+  },
+  {
+    "path": "/api/v1/graph/query",
+    "request": {
+      "query_type": "path",
+      "entity_id": "T001",
+      "target_id": "UNKNOWN"
+    },
+    "status": 200,
+    "response": {
+      "status": "empty",
+      "dataset_id": "retail_demo_v1",
+      "is_simulated": true,
+      "source_type": "graph_query",
+      "data_nature": "simulated",
+      "data": {
+        "nodes": [],
+        "edges": [],
+        "relationships": [],
+        "paths": [],
+        "hop_count": 0,
+        "source": "neo4j",
+        "dataset_id": "retail_demo_v1",
+        "is_simulated": true,
+        "truncated": false,
+        "entity_found": true,
+        "target_found": false
+      }
+    },
+    "elapsed_ms": 40.3
+  },
+  {
+    "path": "/api/v1/graph/query",
+    "request": {
+      "query_type": "one_hop",
+      "entity_id": "P001",
+      "limit": 100
+    },
+    "status": 200,
+    "response": {
+      "status": "success",
+      "dataset_id": "retail_demo_v1",
+      "is_simulated": true,
+      "source_type": "graph_query",
+      "data_nature": "simulated",
+      "data": {
+        "nodes": [
+          {
+            "entity_type": "Product",
+            "dataset_id": "retail_demo_v1",
+            "name": "模拟燕麦",
+            "is_simulated": true,
+            "id": "P001"
+          },
+          {
+            "entity_type": "Category",
+            "dataset_id": "retail_demo_v1",
+            "name": "模拟食品",
+            "is_simulated": true,
+            "id": "C001"
+          },
+          {
+            "entity_type": "Supplier",
+            "dataset_id": "retail_demo_v1",
+            "name": "模拟供应商甲",
+            "is_simulated": true,
+            "id": "S001"
+          },
+          {
+            "entity_type": "Store",
+            "dataset_id": "retail_demo_v1",
+            "name": "模拟门店一",
+            "is_simulated": true,
+            "id": "T001"
+          },
+          {
+            "entity_type": "Promotion",
+            "dataset_id": "retail_demo_v1",
+            "name": "模拟秋季活动",
+            "is_simulated": true,
+            "id": "M001"
+          }
+        ],
+        "edges": [
+          {
+            "source": "P001",
+            "target": "C001",
+            "relation": "BELONGS_TO",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R001"
+          },
+          {
+            "source": "S001",
+            "target": "P001",
+            "relation": "SUPPLIES",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R003"
+          },
+          {
+            "source": "T001",
+            "target": "P001",
+            "relation": "STOCKS",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R004"
+          },
+          {
+            "source": "M001",
+            "target": "P001",
+            "relation": "FEATURES",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R006"
+          }
+        ],
+        "relationships": [
+          {
+            "source": "P001",
+            "target": "C001",
+            "relation": "BELONGS_TO",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R001"
+          },
+          {
+            "source": "S001",
+            "target": "P001",
+            "relation": "SUPPLIES",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R003"
+          },
+          {
+            "source": "T001",
+            "target": "P001",
+            "relation": "STOCKS",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R004"
+          },
+          {
+            "source": "M001",
+            "target": "P001",
+            "relation": "FEATURES",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R006"
+          }
+        ],
+        "paths": [
+          {
+            "node_ids": [
+              "P001",
+              "C001"
+            ],
+            "relationship_ids": [
+              "R001"
+            ],
+            "hop_count": 1
+          },
+          {
+            "node_ids": [
+              "P001",
+              "S001"
+            ],
+            "relationship_ids": [
+              "R003"
+            ],
+            "hop_count": 1
+          },
+          {
+            "node_ids": [
+              "P001",
+              "T001"
+            ],
+            "relationship_ids": [
+              "R004"
+            ],
+            "hop_count": 1
+          },
+          {
+            "node_ids": [
+              "P001",
+              "M001"
+            ],
+            "relationship_ids": [
+              "R006"
+            ],
+            "hop_count": 1
+          }
+        ],
+        "hop_count": 1,
+        "source": "neo4j",
+        "dataset_id": "retail_demo_v1",
+        "is_simulated": true,
+        "truncated": false,
+        "entity_found": true
+      }
+    },
+    "elapsed_ms": 58.5
+  },
+  {
+    "path": "/api/v1/graph/query",
+    "request": {
+      "query_type": "one_hop",
+      "entity_id": "T001",
+      "limit": 100
+    },
+    "status": 200,
+    "response": {
+      "status": "success",
+      "dataset_id": "retail_demo_v1",
+      "is_simulated": true,
+      "source_type": "graph_query",
+      "data_nature": "simulated",
+      "data": {
+        "nodes": [
+          {
+            "entity_type": "Store",
+            "dataset_id": "retail_demo_v1",
+            "name": "模拟门店一",
+            "is_simulated": true,
+            "id": "T001"
+          },
+          {
+            "entity_type": "Product",
+            "dataset_id": "retail_demo_v1",
+            "name": "模拟燕麦",
+            "is_simulated": true,
+            "id": "P001"
+          },
+          {
+            "entity_type": "Product",
+            "dataset_id": "retail_demo_v1",
+            "name": "模拟牛奶",
+            "is_simulated": true,
+            "id": "P002"
+          },
+          {
+            "entity_type": "Promotion",
+            "dataset_id": "retail_demo_v1",
+            "name": "模拟秋季活动",
+            "is_simulated": true,
+            "id": "M001"
+          }
+        ],
+        "edges": [
+          {
+            "source": "T001",
+            "target": "P001",
+            "relation": "STOCKS",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R004"
+          },
+          {
+            "source": "T001",
+            "target": "P002",
+            "relation": "STOCKS",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R005"
+          },
+          {
+            "source": "M001",
+            "target": "T001",
+            "relation": "APPLIES_TO",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R007"
+          }
+        ],
+        "relationships": [
+          {
+            "source": "T001",
+            "target": "P001",
+            "relation": "STOCKS",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R004"
+          },
+          {
+            "source": "T001",
+            "target": "P002",
+            "relation": "STOCKS",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R005"
+          },
+          {
+            "source": "M001",
+            "target": "T001",
+            "relation": "APPLIES_TO",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R007"
+          }
+        ],
+        "paths": [
+          {
+            "node_ids": [
+              "T001",
+              "P001"
+            ],
+            "relationship_ids": [
+              "R004"
+            ],
+            "hop_count": 1
+          },
+          {
+            "node_ids": [
+              "T001",
+              "P002"
+            ],
+            "relationship_ids": [
+              "R005"
+            ],
+            "hop_count": 1
+          },
+          {
+            "node_ids": [
+              "T001",
+              "M001"
+            ],
+            "relationship_ids": [
+              "R007"
+            ],
+            "hop_count": 1
+          }
+        ],
+        "hop_count": 1,
+        "source": "neo4j",
+        "dataset_id": "retail_demo_v1",
+        "is_simulated": true,
+        "truncated": false,
+        "entity_found": true
+      }
+    },
+    "elapsed_ms": 49.7
+  },
+  {
+    "path": "/api/v1/graph/query",
+    "request": {
+      "query_type": "two_hop",
+      "entity_id": "T001",
+      "limit": 100
+    },
+    "status": 200,
+    "response": {
+      "status": "success",
+      "dataset_id": "retail_demo_v1",
+      "is_simulated": true,
+      "source_type": "graph_query",
+      "data_nature": "simulated",
+      "data": {
+        "nodes": [
+          {
+            "entity_type": "Store",
+            "dataset_id": "retail_demo_v1",
+            "name": "模拟门店一",
+            "is_simulated": true,
+            "id": "T001"
+          },
+          {
+            "entity_type": "Product",
+            "dataset_id": "retail_demo_v1",
+            "name": "模拟燕麦",
+            "is_simulated": true,
+            "id": "P001"
+          },
+          {
+            "entity_type": "Category",
+            "dataset_id": "retail_demo_v1",
+            "name": "模拟食品",
+            "is_simulated": true,
+            "id": "C001"
+          },
+          {
+            "entity_type": "Supplier",
+            "dataset_id": "retail_demo_v1",
+            "name": "模拟供应商甲",
+            "is_simulated": true,
+            "id": "S001"
+          },
+          {
+            "entity_type": "Promotion",
+            "dataset_id": "retail_demo_v1",
+            "name": "模拟秋季活动",
+            "is_simulated": true,
+            "id": "M001"
+          },
+          {
+            "entity_type": "Product",
+            "dataset_id": "retail_demo_v1",
+            "name": "模拟牛奶",
+            "is_simulated": true,
+            "id": "P002"
+          }
+        ],
+        "edges": [
+          {
+            "source": "T001",
+            "target": "P001",
+            "relation": "STOCKS",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R004"
+          },
+          {
+            "source": "P001",
+            "target": "C001",
+            "relation": "BELONGS_TO",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R001"
+          },
+          {
+            "source": "S001",
+            "target": "P001",
+            "relation": "SUPPLIES",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R003"
+          },
+          {
+            "source": "M001",
+            "target": "P001",
+            "relation": "FEATURES",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R006"
+          },
+          {
+            "source": "T001",
+            "target": "P002",
+            "relation": "STOCKS",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R005"
+          },
+          {
+            "source": "P002",
+            "target": "C001",
+            "relation": "BELONGS_TO",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R002"
+          },
+          {
+            "source": "M001",
+            "target": "T001",
+            "relation": "APPLIES_TO",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R007"
+          }
+        ],
+        "relationships": [
+          {
+            "source": "T001",
+            "target": "P001",
+            "relation": "STOCKS",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R004"
+          },
+          {
+            "source": "P001",
+            "target": "C001",
+            "relation": "BELONGS_TO",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R001"
+          },
+          {
+            "source": "S001",
+            "target": "P001",
+            "relation": "SUPPLIES",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R003"
+          },
+          {
+            "source": "M001",
+            "target": "P001",
+            "relation": "FEATURES",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R006"
+          },
+          {
+            "source": "T001",
+            "target": "P002",
+            "relation": "STOCKS",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R005"
+          },
+          {
+            "source": "P002",
+            "target": "C001",
+            "relation": "BELONGS_TO",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R002"
+          },
+          {
+            "source": "M001",
+            "target": "T001",
+            "relation": "APPLIES_TO",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R007"
+          }
+        ],
+        "paths": [
+          {
+            "node_ids": [
+              "T001",
+              "P001"
+            ],
+            "relationship_ids": [
+              "R004"
+            ],
+            "hop_count": 1
+          },
+          {
+            "node_ids": [
+              "T001",
+              "P001",
+              "C001"
+            ],
+            "relationship_ids": [
+              "R004",
+              "R001"
+            ],
+            "hop_count": 2
+          },
+          {
+            "node_ids": [
+              "T001",
+              "P001",
+              "S001"
+            ],
+            "relationship_ids": [
+              "R004",
+              "R003"
+            ],
+            "hop_count": 2
+          },
+          {
+            "node_ids": [
+              "T001",
+              "P001",
+              "M001"
+            ],
+            "relationship_ids": [
+              "R004",
+              "R006"
+            ],
+            "hop_count": 2
+          },
+          {
+            "node_ids": [
+              "T001",
+              "P002"
+            ],
+            "relationship_ids": [
+              "R005"
+            ],
+            "hop_count": 1
+          },
+          {
+            "node_ids": [
+              "T001",
+              "P002",
+              "C001"
+            ],
+            "relationship_ids": [
+              "R005",
+              "R002"
+            ],
+            "hop_count": 2
+          },
+          {
+            "node_ids": [
+              "T001",
+              "M001"
+            ],
+            "relationship_ids": [
+              "R007"
+            ],
+            "hop_count": 1
+          },
+          {
+            "node_ids": [
+              "T001",
+              "M001",
+              "P001"
+            ],
+            "relationship_ids": [
+              "R007",
+              "R006"
+            ],
+            "hop_count": 2
+          }
+        ],
+        "hop_count": 2,
+        "source": "neo4j",
+        "dataset_id": "retail_demo_v1",
+        "is_simulated": true,
+        "truncated": false,
+        "entity_found": true
+      }
+    },
+    "elapsed_ms": 50.8
+  },
+  {
+    "path": "/api/v1/graph/query",
+    "request": {
+      "query_type": "three_hop",
+      "entity_id": "T001",
+      "limit": 100
+    },
+    "status": 200,
+    "response": {
+      "status": "success",
+      "dataset_id": "retail_demo_v1",
+      "is_simulated": true,
+      "source_type": "graph_query",
+      "data_nature": "simulated",
+      "data": {
+        "nodes": [
+          {
+            "entity_type": "Store",
+            "dataset_id": "retail_demo_v1",
+            "name": "模拟门店一",
+            "is_simulated": true,
+            "id": "T001"
+          },
+          {
+            "entity_type": "Product",
+            "dataset_id": "retail_demo_v1",
+            "name": "模拟燕麦",
+            "is_simulated": true,
+            "id": "P001"
+          },
+          {
+            "entity_type": "Category",
+            "dataset_id": "retail_demo_v1",
+            "name": "模拟食品",
+            "is_simulated": true,
+            "id": "C001"
+          },
+          {
+            "entity_type": "Product",
+            "dataset_id": "retail_demo_v1",
+            "name": "模拟牛奶",
+            "is_simulated": true,
+            "id": "P002"
+          },
+          {
+            "entity_type": "Supplier",
+            "dataset_id": "retail_demo_v1",
+            "name": "模拟供应商甲",
+            "is_simulated": true,
+            "id": "S001"
+          },
+          {
+            "entity_type": "Promotion",
+            "dataset_id": "retail_demo_v1",
+            "name": "模拟秋季活动",
+            "is_simulated": true,
+            "id": "M001"
+          }
+        ],
+        "edges": [
+          {
+            "source": "T001",
+            "target": "P001",
+            "relation": "STOCKS",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R004"
+          },
+          {
+            "source": "P001",
+            "target": "C001",
+            "relation": "BELONGS_TO",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R001"
+          },
+          {
+            "source": "P002",
+            "target": "C001",
+            "relation": "BELONGS_TO",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R002"
+          },
+          {
+            "source": "S001",
+            "target": "P001",
+            "relation": "SUPPLIES",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R003"
+          },
+          {
+            "source": "M001",
+            "target": "P001",
+            "relation": "FEATURES",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R006"
+          },
+          {
+            "source": "T001",
+            "target": "P002",
+            "relation": "STOCKS",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R005"
+          },
+          {
+            "source": "M001",
+            "target": "T001",
+            "relation": "APPLIES_TO",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R007"
+          }
+        ],
+        "relationships": [
+          {
+            "source": "T001",
+            "target": "P001",
+            "relation": "STOCKS",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R004"
+          },
+          {
+            "source": "P001",
+            "target": "C001",
+            "relation": "BELONGS_TO",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R001"
+          },
+          {
+            "source": "P002",
+            "target": "C001",
+            "relation": "BELONGS_TO",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R002"
+          },
+          {
+            "source": "S001",
+            "target": "P001",
+            "relation": "SUPPLIES",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R003"
+          },
+          {
+            "source": "M001",
+            "target": "P001",
+            "relation": "FEATURES",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R006"
+          },
+          {
+            "source": "T001",
+            "target": "P002",
+            "relation": "STOCKS",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R005"
+          },
+          {
+            "source": "M001",
+            "target": "T001",
+            "relation": "APPLIES_TO",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R007"
+          }
+        ],
+        "paths": [
+          {
+            "node_ids": [
+              "T001",
+              "P001"
+            ],
+            "relationship_ids": [
+              "R004"
+            ],
+            "hop_count": 1
+          },
+          {
+            "node_ids": [
+              "T001",
+              "P001",
+              "C001"
+            ],
+            "relationship_ids": [
+              "R004",
+              "R001"
+            ],
+            "hop_count": 2
+          },
+          {
+            "node_ids": [
+              "T001",
+              "P001",
+              "C001",
+              "P002"
+            ],
+            "relationship_ids": [
+              "R004",
+              "R001",
+              "R002"
+            ],
+            "hop_count": 3
+          },
+          {
+            "node_ids": [
+              "T001",
+              "P001",
+              "S001"
+            ],
+            "relationship_ids": [
+              "R004",
+              "R003"
+            ],
+            "hop_count": 2
+          },
+          {
+            "node_ids": [
+              "T001",
+              "P001",
+              "M001"
+            ],
+            "relationship_ids": [
+              "R004",
+              "R006"
+            ],
+            "hop_count": 2
+          },
+          {
+            "node_ids": [
+              "T001",
+              "P002"
+            ],
+            "relationship_ids": [
+              "R005"
+            ],
+            "hop_count": 1
+          },
+          {
+            "node_ids": [
+              "T001",
+              "P002",
+              "C001"
+            ],
+            "relationship_ids": [
+              "R005",
+              "R002"
+            ],
+            "hop_count": 2
+          },
+          {
+            "node_ids": [
+              "T001",
+              "P002",
+              "C001",
+              "P001"
+            ],
+            "relationship_ids": [
+              "R005",
+              "R002",
+              "R001"
+            ],
+            "hop_count": 3
+          },
+          {
+            "node_ids": [
+              "T001",
+              "M001"
+            ],
+            "relationship_ids": [
+              "R007"
+            ],
+            "hop_count": 1
+          },
+          {
+            "node_ids": [
+              "T001",
+              "M001",
+              "P001"
+            ],
+            "relationship_ids": [
+              "R007",
+              "R006"
+            ],
+            "hop_count": 2
+          },
+          {
+            "node_ids": [
+              "T001",
+              "M001",
+              "P001",
+              "C001"
+            ],
+            "relationship_ids": [
+              "R007",
+              "R006",
+              "R001"
+            ],
+            "hop_count": 3
+          },
+          {
+            "node_ids": [
+              "T001",
+              "M001",
+              "P001",
+              "S001"
+            ],
+            "relationship_ids": [
+              "R007",
+              "R006",
+              "R003"
+            ],
+            "hop_count": 3
+          }
+        ],
+        "hop_count": 3,
+        "source": "neo4j",
+        "dataset_id": "retail_demo_v1",
+        "is_simulated": true,
+        "truncated": false,
+        "entity_found": true
+      }
+    },
+    "elapsed_ms": 66.8
+  },
+  {
+    "path": "/api/v1/graph/query",
+    "request": {
+      "query_type": "three_hop",
+      "entity_id": "P001",
+      "limit": 100
+    },
+    "status": 200,
+    "response": {
+      "status": "success",
+      "dataset_id": "retail_demo_v1",
+      "is_simulated": true,
+      "source_type": "graph_query",
+      "data_nature": "simulated",
+      "data": {
+        "nodes": [
+          {
+            "entity_type": "Product",
+            "dataset_id": "retail_demo_v1",
+            "name": "模拟燕麦",
+            "is_simulated": true,
+            "id": "P001"
+          },
+          {
+            "entity_type": "Category",
+            "dataset_id": "retail_demo_v1",
+            "name": "模拟食品",
+            "is_simulated": true,
+            "id": "C001"
+          },
+          {
+            "entity_type": "Product",
+            "dataset_id": "retail_demo_v1",
+            "name": "模拟牛奶",
+            "is_simulated": true,
+            "id": "P002"
+          },
+          {
+            "entity_type": "Store",
+            "dataset_id": "retail_demo_v1",
+            "name": "模拟门店一",
+            "is_simulated": true,
+            "id": "T001"
+          },
+          {
+            "entity_type": "Supplier",
+            "dataset_id": "retail_demo_v1",
+            "name": "模拟供应商甲",
+            "is_simulated": true,
+            "id": "S001"
+          },
+          {
+            "entity_type": "Promotion",
+            "dataset_id": "retail_demo_v1",
+            "name": "模拟秋季活动",
+            "is_simulated": true,
+            "id": "M001"
+          }
+        ],
+        "edges": [
+          {
+            "source": "P001",
+            "target": "C001",
+            "relation": "BELONGS_TO",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R001"
+          },
+          {
+            "source": "P002",
+            "target": "C001",
+            "relation": "BELONGS_TO",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R002"
+          },
+          {
+            "source": "T001",
+            "target": "P002",
+            "relation": "STOCKS",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R005"
+          },
+          {
+            "source": "S001",
+            "target": "P001",
+            "relation": "SUPPLIES",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R003"
+          },
+          {
+            "source": "T001",
+            "target": "P001",
+            "relation": "STOCKS",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R004"
+          },
+          {
+            "source": "M001",
+            "target": "T001",
+            "relation": "APPLIES_TO",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R007"
+          },
+          {
+            "source": "M001",
+            "target": "P001",
+            "relation": "FEATURES",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R006"
+          }
+        ],
+        "relationships": [
+          {
+            "source": "P001",
+            "target": "C001",
+            "relation": "BELONGS_TO",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R001"
+          },
+          {
+            "source": "P002",
+            "target": "C001",
+            "relation": "BELONGS_TO",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R002"
+          },
+          {
+            "source": "T001",
+            "target": "P002",
+            "relation": "STOCKS",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R005"
+          },
+          {
+            "source": "S001",
+            "target": "P001",
+            "relation": "SUPPLIES",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R003"
+          },
+          {
+            "source": "T001",
+            "target": "P001",
+            "relation": "STOCKS",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R004"
+          },
+          {
+            "source": "M001",
+            "target": "T001",
+            "relation": "APPLIES_TO",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R007"
+          },
+          {
+            "source": "M001",
+            "target": "P001",
+            "relation": "FEATURES",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R006"
+          }
+        ],
+        "paths": [
+          {
+            "node_ids": [
+              "P001",
+              "C001"
+            ],
+            "relationship_ids": [
+              "R001"
+            ],
+            "hop_count": 1
+          },
+          {
+            "node_ids": [
+              "P001",
+              "C001",
+              "P002"
+            ],
+            "relationship_ids": [
+              "R001",
+              "R002"
+            ],
+            "hop_count": 2
+          },
+          {
+            "node_ids": [
+              "P001",
+              "C001",
+              "P002",
+              "T001"
+            ],
+            "relationship_ids": [
+              "R001",
+              "R002",
+              "R005"
+            ],
+            "hop_count": 3
+          },
+          {
+            "node_ids": [
+              "P001",
+              "S001"
+            ],
+            "relationship_ids": [
+              "R003"
+            ],
+            "hop_count": 1
+          },
+          {
+            "node_ids": [
+              "P001",
+              "T001"
+            ],
+            "relationship_ids": [
+              "R004"
+            ],
+            "hop_count": 1
+          },
+          {
+            "node_ids": [
+              "P001",
+              "T001",
+              "P002"
+            ],
+            "relationship_ids": [
+              "R004",
+              "R005"
+            ],
+            "hop_count": 2
+          },
+          {
+            "node_ids": [
+              "P001",
+              "T001",
+              "P002",
+              "C001"
+            ],
+            "relationship_ids": [
+              "R004",
+              "R005",
+              "R002"
+            ],
+            "hop_count": 3
+          },
+          {
+            "node_ids": [
+              "P001",
+              "T001",
+              "M001"
+            ],
+            "relationship_ids": [
+              "R004",
+              "R007"
+            ],
+            "hop_count": 2
+          },
+          {
+            "node_ids": [
+              "P001",
+              "M001"
+            ],
+            "relationship_ids": [
+              "R006"
+            ],
+            "hop_count": 1
+          },
+          {
+            "node_ids": [
+              "P001",
+              "M001",
+              "T001"
+            ],
+            "relationship_ids": [
+              "R006",
+              "R007"
+            ],
+            "hop_count": 2
+          },
+          {
+            "node_ids": [
+              "P001",
+              "M001",
+              "T001",
+              "P002"
+            ],
+            "relationship_ids": [
+              "R006",
+              "R007",
+              "R005"
+            ],
+            "hop_count": 3
+          }
+        ],
+        "hop_count": 3,
+        "source": "neo4j",
+        "dataset_id": "retail_demo_v1",
+        "is_simulated": true,
+        "truncated": false,
+        "entity_found": true
+      }
+    },
+    "elapsed_ms": 66.0
+  },
+  {
+    "path": "/api/v1/graph/query",
+    "request": {
+      "query_type": "path",
+      "entity_id": "T001",
+      "target_id": "C001",
+      "limit": 100
+    },
+    "status": 200,
+    "response": {
+      "status": "success",
+      "dataset_id": "retail_demo_v1",
+      "is_simulated": true,
+      "source_type": "graph_query",
+      "data_nature": "simulated",
+      "data": {
+        "nodes": [
+          {
+            "entity_type": "Store",
+            "dataset_id": "retail_demo_v1",
+            "name": "模拟门店一",
+            "is_simulated": true,
+            "id": "T001"
+          },
+          {
+            "entity_type": "Product",
+            "dataset_id": "retail_demo_v1",
+            "name": "模拟燕麦",
+            "is_simulated": true,
+            "id": "P001"
+          },
+          {
+            "entity_type": "Category",
+            "dataset_id": "retail_demo_v1",
+            "name": "模拟食品",
+            "is_simulated": true,
+            "id": "C001"
+          },
+          {
+            "entity_type": "Product",
+            "dataset_id": "retail_demo_v1",
+            "name": "模拟牛奶",
+            "is_simulated": true,
+            "id": "P002"
+          },
+          {
+            "entity_type": "Promotion",
+            "dataset_id": "retail_demo_v1",
+            "name": "模拟秋季活动",
+            "is_simulated": true,
+            "id": "M001"
+          }
+        ],
+        "edges": [
+          {
+            "source": "T001",
+            "target": "P001",
+            "relation": "STOCKS",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R004"
+          },
+          {
+            "source": "P001",
+            "target": "C001",
+            "relation": "BELONGS_TO",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R001"
+          },
+          {
+            "source": "T001",
+            "target": "P002",
+            "relation": "STOCKS",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R005"
+          },
+          {
+            "source": "P002",
+            "target": "C001",
+            "relation": "BELONGS_TO",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R002"
+          },
+          {
+            "source": "M001",
+            "target": "T001",
+            "relation": "APPLIES_TO",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R007"
+          },
+          {
+            "source": "M001",
+            "target": "P001",
+            "relation": "FEATURES",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R006"
+          }
+        ],
+        "relationships": [
+          {
+            "source": "T001",
+            "target": "P001",
+            "relation": "STOCKS",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R004"
+          },
+          {
+            "source": "P001",
+            "target": "C001",
+            "relation": "BELONGS_TO",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R001"
+          },
+          {
+            "source": "T001",
+            "target": "P002",
+            "relation": "STOCKS",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R005"
+          },
+          {
+            "source": "P002",
+            "target": "C001",
+            "relation": "BELONGS_TO",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R002"
+          },
+          {
+            "source": "M001",
+            "target": "T001",
+            "relation": "APPLIES_TO",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R007"
+          },
+          {
+            "source": "M001",
+            "target": "P001",
+            "relation": "FEATURES",
+            "dataset_id": "retail_demo_v1",
+            "is_simulated": true,
+            "id": "R006"
+          }
+        ],
+        "paths": [
+          {
+            "node_ids": [
+              "T001",
+              "P001",
+              "C001"
+            ],
+            "relationship_ids": [
+              "R004",
+              "R001"
+            ],
+            "hop_count": 2
+          },
+          {
+            "node_ids": [
+              "T001",
+              "P002",
+              "C001"
+            ],
+            "relationship_ids": [
+              "R005",
+              "R002"
+            ],
+            "hop_count": 2
+          },
+          {
+            "node_ids": [
+              "T001",
+              "M001",
+              "P001",
+              "C001"
+            ],
+            "relationship_ids": [
+              "R007",
+              "R006",
+              "R001"
+            ],
+            "hop_count": 3
+          }
+        ],
+        "hop_count": 3,
+        "source": "neo4j",
+        "dataset_id": "retail_demo_v1",
+        "is_simulated": true,
+        "truncated": false,
+        "entity_found": true,
+        "target_found": true
+      }
+    },
+    "elapsed_ms": 63.4
+  }
+]

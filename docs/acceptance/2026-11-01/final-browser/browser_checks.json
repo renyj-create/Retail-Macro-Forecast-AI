@@ -1,0 +1,101 @@
+[
+  {
+    "page": "数据分析",
+    "text": "AI Retail Analyst\n经营分析 · 自然语言问数\n首页\n数据分析\nAI Agent\n智能报告\n知识库\n知识图谱\n服务在线\n数据分析\n\n宏观社零趋势与用户流失风险，数据来源与口径已在页内明确标注。\n\n宏观总览\n用户流失预警\n宏观数据：国家统计局真实数据（2008-01 至 2026-09）；用户微观数据：RFM 模拟数据\n最新社零总额（亿元）\n42,432.5\n同比 1.1%（数据截至 2026-09）\n模拟流失标签占比\n15.95%\n样本 4766 名用户\n时序回测 MAPE\n5.08%\n训练期 AUC 约 0.82\n宏观零售趋势预测\n未来预测 · 尚未经过实际值验证\n实线为历史真实值，橙色虚线为未来预测值，浅色带为名义 95% 预测区间（不代表已验证的长期覆盖率）。数据来源：国家统计局。\n近期历史回测 MAPE\n5.08%\n回测 2026-07 / 2026-08 / 2026-09，共 3 个月\n近期历史回测 MAE\n2008.13\n单位：亿元，与原始社零数据一致\n近期历史回测 RMSE\n2350.6\n单位：亿元，与原始社零数据一致\n多窗口滚动回测 MAPE（均值）\n5.59%\n4 个历史窗口的平均值\n多窗口滚动回测明细\n模型评估说明"
+  },
+  {
+    "page": "AI Agent",
+    "text": "AI Retail Analyst\n经营分析 · 自然语言问数\n首页\n数据分析\nAI Agent\n智能报告\n知识库\n知识图谱\n服务在线\n智能问数 Agent\n\n输入自然语言问题，自动完成意图识别、真实数据查询、模型预测与知识检索，生成可追溯的结构化分析报告。\n\n示例问题：\n分析最近社零数据走势，识别异常变化，并给出有数据依据的分析建议。\n基于现有历史数据预测未来三个月社零走势，展示预测结果及模型评估信息。\n分析用户流失预测结果，展示风险分布、主要影响特征和需要注意的模型限制。\n开始智能分析\n经营报表截图分析\n图片识别信息未经核实，不是数据库事实。仅支持 PNG/JPEG，最大 5 MiB、1600 万像素。\n分析截图\n\n请选择图片\n\n输入问题并点击「开始智能分析」，查看真实执行结果"
+  },
+  {
+    "page": "智能报告",
+    "text": "AI Retail Analyst\n经营分析 · 自然语言问数\n首页\n数据分析\nAI Agent\n智能报告\n知识库\n知识图谱\n服务在线\n智能报告\n\nAI 生成的分析报告可点赞/点踩反馈，反馈持久化用于后续 Prompt 迭代。\n\n反馈总数\n3\n点赞数\n3\n点踩数\n0\n点赞率\n100.0%\n反馈记录\n刷新\n反馈类型：\n全部\nID\n\t\n用户问题\n\t\n反馈类型\n\t\n提交时间\n\t\n操作\n3\n\t\n分析用户流失预测结果，展示风险分布、主要影响特征和需要注意的模型限制。\n\t\n点赞\n\t\n2026-10-21 16:43:19\n\t\n查看\n\n\n2\n\t\n结合宏观零售数据和用户流失情况，给出可执行的经营建议。\n\t\n点赞\n\t\n2026-10-21 10:11:26\n\t\n查看\n\n\n1\n\t\n结合宏观零售数据，给出当前用户流失预警和运营建议\n\t\n点赞\n\t\n2026-10-12 16:04:14\n\t\n查看\nTotal 3\n10/page\n1\nGo to"
+  },
+  {
+    "page": "知识库",
+    "text": "AI Retail Analyst\n经营分析 · 自然语言问数\n首页\n数据分析\nAI Agent\n智能报告\n知识库\n知识图谱\n服务在线\n知识库\n\n为经营分析提供可检索、可追溯的文本依据。\n\n存储层\nChromaDB\n本地持久化\n检索层\n字符 n-gram（2,3）+ TF-IDF\n基于字符级文本特征的轻量检索\n知识来源\ndocs/policy.txt\n示例研报文本\nRAG 检索流程\n从本地文档到可追溯的原文依据。\n01\n文档读取与分块\n读取本地文本，按空行拆分内容片段。\n02\n文本向量化\n使用字符 n-gram 与 TF-IDF 表示文本特征。\n03\n相似度检索\n检索与用户问题相关的 Top-K 文本片段。\n04\n返回原文依据\n将命中片段及来源交给 Agent，作为报告生成的参考。\n\nRAG 为智能问数 Agent 提供检索依据；没有有效命中时明确返回，不编造知识库结论。"
+  },
+  {
+    "page": "知识图谱",
+    "text": "AI Retail Analyst\n经营分析 · 自然语言问数\n首页\n数据分析\nAI Agent\n智能报告\n知识库\n知识图谱\n服务在线\n零售知识图谱\n独立模拟数据 · 仅表示关联关系，不是真实经营事实，不能用于推断促销收益或流失概率\n加载图谱实体\n模拟食品 (Category)\n一跳关系\n查询深度：1 跳以内\n查询关联\n\n查询完成（模拟数据）\n\n颜色：商品蓝色、品类绿色、供应商橙色、门店紫色、活动红色\n\n唯一实体 6 · 唯一关系 0 · 返回最大跳数 0\n\n适应画布\n重置布局\n重新查询\n节点属性\n\n点击节点查看属性，双击打开详情\n\n查询路径（顺序表示遍历；箭头表示数据库真实方向）\n清除路径高亮\n起点\n\t\n关系\n\t\n终点\nNo Data\n\n来源：graph_query；数据性质：simulated；数据集：retail_demo_v1"
+  },
+  {
+    "mode": "一跳关系",
+    "text": "零售知识图谱\n独立模拟数据 · 仅表示关联关系，不是真实经营事实，不能用于推断促销收益或流失概率\n加载图谱实体\n模拟门店一 (Store)\n一跳关系\n查询深度：1 跳以内\n查询关联\n\n查询完成（模拟数据）\n\n颜色：商品蓝色、品类绿色、供应商橙色、门店紫色、活动红色\n\n唯一实体 4 · 唯一关系 3 · 返回最大跳数 1\n\n适应画布\n重置布局\n重新查询\n节点属性\n\n点击节点查看属性，双击打开详情\n\n查询路径（顺序表示遍历；箭头表示数据库真实方向）\n清除路径高亮\nT001 —STOCKS→ P001（1 跳）\nT001 —STOCKS→ P002（1 跳）\nT001 ←APPLIES_TO— M001（1 跳）\n起点\n\t\n关系\n\t\n终点\nT001\n\t\nSTOCKS\n\t\nP001\n\n\nT001\n\t\nSTOCKS\n\t\nP002\n\n\nM001\n\t\nAPPLIES_TO\n\t\nT001\n\n来源：graph_query；数据性质：simulated；数据集：retail_demo_v1"
+  },
+  {
+    "mode": "二跳关系",
+    "text": "零售知识图谱\n独立模拟数据 · 仅表示关联关系，不是真实经营事实，不能用于推断促销收益或流失概率\n加载图谱实体\n模拟门店一 (Store)\n二跳关系\n查询深度：2 跳以内\n查询关联\n\n查询完成（模拟数据）\n\n颜色：商品蓝色、品类绿色、供应商橙色、门店紫色、活动红色\n\n唯一实体 6 · 唯一关系 7 · 返回最大跳数 2\n\n适应画布\n重置布局\n重新查询\n节点属性\n\n点击节点查看属性，双击打开详情\n\n查询路径（顺序表示遍历；箭头表示数据库真实方向）\n清除路径高亮\nT001 —STOCKS→ P001（1 跳）\nT001 —STOCKS→ P001 —BELONGS_TO→ C001（2 跳）\nT001 —STOCKS→ P001 ←SUPPLIES— S001（2 跳）\nT001 —STOCKS→ P001 ←FEATURES— M001（2 跳）\nT001 —STOCKS→ P002（1 跳）\nT001 —STOCKS→ P002 —BELONGS_TO→ C001（2 跳）\nT001 ←APPLIES_TO— M001（1 跳）\nT001 ←APPLIES_TO— M001 —FEATURES→ P001（2 跳）\n起点\n\t\n关系\n\t\n终点\nT001\n\t\nSTOCKS\n\t\nP001\n\n\nP001\n\t\nBELONGS_TO\n\t\nC001\n\n\nS001\n\t\nSUPPLIES\n\t\nP001\n\n\nM001\n\t\nFEATURES\n\t\nP001\n\n\nT001\n\t\nSTOCKS\n\t\nP002\n\n\nP002\n\t\nBELONGS_TO\n\t\nC001\n\n\nM001\n\t\nAPPLIES_TO\n\t\nT001\n\n来源：graph_query；数据性质：simulated；数据集：retail_demo_v1"
+  },
+  {
+    "mode": "三跳关系",
+    "text": "零售知识图谱\n独立模拟数据 · 仅表示关联关系，不是真实经营事实，不能用于推断促销收益或流失概率\n加载图谱实体\n模拟门店一 (Store)\n三跳关系\n查询深度：3 跳以内\n查询关联\n\n查询完成（模拟数据）\n\n颜色：商品蓝色、品类绿色、供应商橙色、门店紫色、活动红色\n\n唯一实体 6 · 唯一关系 7 · 返回最大跳数 3\n\n适应画布\n重置布局\n重新查询\n节点属性\n\n点击节点查看属性，双击打开详情\n\n查询路径（顺序表示遍历；箭头表示数据库真实方向）\n清除路径高亮\nT001 —STOCKS→ P001（1 跳）\nT001 —STOCKS→ P001 —BELONGS_TO→ C001（2 跳）\nT001 —STOCKS→ P001 —BELONGS_TO→ C001 ←BELONGS_TO— P002（3 跳）\nT001 —STOCKS→ P001 ←SUPPLIES— S001（2 跳）\nT001 —STOCKS→ P001 ←FEATURES— M001（2 跳）\nT001 —STOCKS→ P002（1 跳）\nT001 —STOCKS→ P002 —BELONGS_TO→ C001（2 跳）\nT001 —STOCKS→ P002 —BELONGS_TO→ C001 ←BELONGS_TO— P001（3 跳）\nT001 ←APPLIES_TO— M001（1 跳）\nT001 ←APPLIES_TO— M001 —FEATURES→ P001（2 跳）\nT001 ←APPLIES_TO— M001 —FEATURES→ P001 —BELONGS_TO→ C001（3 跳）\nT001 ←APPLIES_TO— M001 —FEATURES→ P001 ←SUPPLIES— S001（3 跳）\n起点\n\t\n关系\n\t\n终点\nT001\n\t\nSTOCKS\n\t\nP001\n\n\nP001\n\t\nBELONGS_TO\n\t\nC001\n\n\nP002\n\t\nBELONGS_TO\n\t\nC001\n\n\nS001\n\t\nSUPPLIES\n\t\nP001\n\n\nM001\n\t\nFEATURES\n\t\nP001\n\n\nT001\n\t\nSTOCKS\n\t\nP002\n\n\nM001\n\t\nAPPLIES_TO\n\t\nT001\n\n来源：graph_query；数据性质：simulated；数据集：retail_demo_v1"
+  },
+  {
+    "upload": "valid.png",
+    "preview": {
+      "present": true,
+      "decoded": true,
+      "text": "经营报表截图分析\n图片识别信息未经核实，不是数据库事实。仅支持 PNG/JPEG，最大 5 MiB、1600 万像素。\n\n已选择：valid.png\n\n移除图片\n分析截图\n\n已选择图片，待上传"
+    }
+  },
+  {
+    "removed": true
+  },
+  {
+    "upload": "valid.png",
+    "preview": {
+      "present": true,
+      "decoded": true,
+      "text": "经营报表截图分析\n图片识别信息未经核实，不是数据库事实。仅支持 PNG/JPEG，最大 5 MiB、1600 万像素。\n\n已选择：valid.png\n\n移除图片\n分析截图\n\n已选择图片，待上传"
+    }
+  },
+  {
+    "upload": "valid.jpg",
+    "preview": {
+      "present": true,
+      "decoded": true,
+      "text": "经营报表截图分析\n图片识别信息未经核实，不是数据库事实。仅支持 PNG/JPEG，最大 5 MiB、1600 万像素。\n\n已选择：valid.jpg\n\n移除图片\n分析截图\n\n已选择图片，待上传"
+    }
+  },
+  {
+    "upload": "wrong.txt",
+    "preview": {
+      "present": false,
+      "decoded": false,
+      "text": "经营报表截图分析\n图片识别信息未经核实，不是数据库事实。仅支持 PNG/JPEG，最大 5 MiB、1600 万像素。\n分析截图\n\n分析失败：请选择不超过 5 MiB 的 PNG/JPEG 图片\n\n请选择不超过 5 MiB 的 PNG/JPEG 图片"
+    }
+  },
+  {
+    "upload": "broken.png",
+    "preview": {
+      "present": true,
+      "decoded": false,
+      "text": "经营报表截图分析\n图片识别信息未经核实，不是数据库事实。仅支持 PNG/JPEG，最大 5 MiB、1600 万像素。\n\n已选择：broken.png\n\n移除图片\n分析截图\n\n已选择图片，待上传"
+    }
+  },
+  {
+    "upload": "large.png",
+    "preview": {
+      "present": false,
+      "decoded": false,
+      "text": "经营报表截图分析\n图片识别信息未经核实，不是数据库事实。仅支持 PNG/JPEG，最大 5 MiB、1600 万像素。\n分析截图\n\n分析失败：请选择不超过 5 MiB 的 PNG/JPEG 图片\n\n请选择不超过 5 MiB 的 PNG/JPEG 图片"
+    }
+  },
+  {
+    "upload": "pixels.png",
+    "preview": {
+      "present": true,
+      "decoded": true,
+      "text": "经营报表截图分析\n图片识别信息未经核实，不是数据库事实。仅支持 PNG/JPEG，最大 5 MiB、1600 万像素。\n\n已选择：pixels.png\n\n移除图片\n分析截图\n\n已选择图片，待上传"
+    }
+  },
+  {
+    "upload": "valid.png",
+    "preview": {
+      "present": true,
+      "decoded": true,
+      "text": "经营报表截图分析\n图片识别信息未经核实，不是数据库事实。仅支持 PNG/JPEG，最大 5 MiB、1600 万像素。\n\n已选择：valid.png\n\n移除图片\n分析截图\n\n已选择图片，待上传"
+    }
+  }
+]

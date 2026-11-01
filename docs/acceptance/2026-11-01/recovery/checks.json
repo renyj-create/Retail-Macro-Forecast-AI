@@ -1,0 +1,32 @@
+[
+  {
+    "node": "C001",
+    "properties": "节点属性\nentity_type\nCategory\ndataset_id\nretail_demo_v1\nname\n模拟食品\nis_simulated\ntrue\nid\nC001"
+  },
+  {
+    "zoomBefore": 1,
+    "zoomAfter": 1.1
+  },
+  {
+    "upload": "valid.png",
+    "preview": {
+      "present": true,
+      "decoded": true,
+      "text": "经营报表截图分析\n图片识别信息未经核实，不是数据库事实。仅支持 PNG/JPEG，最大 5 MiB、1600 万像素。\n\n已选择：valid.png\n\n移除图片\n分析截图\n\n已选择图片，待上传"
+    }
+  },
+  {
+    "offlineUploadText": "经营报表截图分析\n图片识别信息未经核实，不是数据库事实。仅支持 PNG/JPEG，最大 5 MiB、1600 万像素。\n\n已选择：valid.png\n\n移除图片\n分析截图\n\n分析失败：上传或分析失败，请检查服务后重试\n\n上传或分析失败，请检查服务后重试"
+  },
+  {
+    "upload": "valid.jpg",
+    "preview": {
+      "present": true,
+      "decoded": true,
+      "text": "经营报表截图分析\n图片识别信息未经核实，不是数据库事实。仅支持 PNG/JPEG，最大 5 MiB、1600 万像素。\n\n已选择：valid.jpg\n\n移除图片\n分析截图\n\n已选择图片，待上传"
+    }
+  },
+  {
+    "recoveredUploadText": "经营报表截图分析\n图片识别信息未经核实，不是数据库事实。仅支持 PNG/JPEG，最大 5 MiB、1600 万像素。\n\n已选择：valid.jpg\n\n移除图片\n分析截图\n\n视觉模型未配置，未执行识别\n\n视觉模型未配置，未执行识别\n\n任务：034da4b4f33f42ce8f63bf8521cf1bf1 · 来源：image_extraction · user_uploaded_unverified · none\n\n字段\n\t\n原始文本\n\t\n规范值\n\t\n单位\n\t\n校验状态\nNo Data"
+  }
+]
