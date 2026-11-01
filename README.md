@@ -243,7 +243,7 @@ pip install -r requirements.txt
 
 ### 6.2 生成数据与训练模型（首次运行）
 
-仓库不提交数据、数据库与模型文件（均配置在 `.gitignore` 中）。首次运行时，按顺序执行：
+仓库不提交本机业务数据库、原始CSV和模型权重；仅提交明确标记的 `data/graph_demo/retail_demo.json` 模拟图谱样例。下面步骤仅用于新克隆环境的首次准备；已有数据环境不要重复执行。
 
 ```bash
 # 1. 采集宏观社零数据（写入 data/raw/*.csv 与 retail.db）
@@ -264,7 +264,7 @@ python src/models/train_lgbm_churn.py
 
 ```ini
 # DeepSeek 大模型配置（OpenAI 兼容接口）
-DEEPSEEK_API_KEY=sk-xxxxxxxxxxxxxxxx
+DEEPSEEK_API_KEY=
 DEEPSEEK_BASE_URL=https://api.deepseek.com
 DEEPSEEK_MODEL=deepseek-chat
 
@@ -284,6 +284,10 @@ LANGSMITH_PROJECT=retail-macro-forecast-ai
 
 ### 6.4 启动后端（FastAPI）
 
+若本轮需要知识图谱，先按[安全启动说明](docs/runtime_setup.md)确认已有Neo4j实例，再使用 `python scripts/start_backend_secure.py` 在普通本机终端隐藏输入密码。该方式复用当前实例、不导入数据、不停止其他进程，并在同进程启动后端。不要同时再启动下面的普通Uvicorn。
+
+下面的普通启动命令用于无图谱凭据的基础功能，图谱将如实返回503/not_configured：
+
 在项目根目录执行：
 
 ```bash
@@ -299,21 +303,24 @@ uvicorn src.api.main:app --host 127.0.0.1 --port 8003 --reload
 
 ```bash
 cd retail-frontend
-npm install
-npm run dev
+npm ci
+npm run dev -- --host 127.0.0.1 --port 5173 --strictPort
 ```
 
-开发服务器默认地址为 <http://localhost:5173>。打开页面后，可查看“数据总览”“用户流失预警”“智能问数 Agent”与“报告反馈管理”等模块。
+上述命令使用 <http://127.0.0.1:5173>；端口占用时退出，避免误开第二份服务。打开页面后，可查看“数据总览”“用户流失预警”“智能问数 Agent”与“报告反馈管理”等模块。
 
 ### 6.6 运行测试
 
 在项目根目录、已激活 `retail_env` 环境的情况下执行：
 
 ```bash
+python -m pip install -r requirements-dev.txt
 python -m unittest discover -s src/tests -v
 ```
 
-当前后端全量测试为 **106 项，全部通过**（随代码演进可能变化，以实际运行为准）。测试覆盖意图路由、工具执行、报告降级、六段式解析、数字锚点与用户字段事实校验、LangGraph 路由与执行追踪、FastAPI 集成接口（`/forecast`、`/churn/predict`、`/churn/recall`、`/analyze`、`/overview` 等）、报告持久化，以及离线评测基础设施。测试通过将 `graph_workflow.client` 置空强制走规则降级与模板兜底，不依赖外部大模型 API。
+2026-11-01归档完整回归为 **145项：144通过、1跳过**；真实HTTP图谱集成另有6项通过。跳过项为需要单独认证环境的直接Neo4j测试，不记作通过。记录见[精选验收证据](docs/acceptance/2026-11-01/README.md)。这是已有环境的历史结果，不代表新克隆环境已通过。
+
+测试使用标准库unittest；`requirements-dev.txt`补充Starlette TestClient所需httpx/httpx2及图谱驱动。测试前不要启用视觉模型或外部追踪；完整离线隔离方式见[运行与验证说明](docs/runtime_setup.md)。
 
 ### 6.7 构建前端
 
@@ -324,7 +331,13 @@ npm run build
 
 构建产物输出至 `retail-frontend/dist/`（当前实测构建通过）。
 
-### 6.8 无副作用离线评测（可选）
+### 6.8 知识图谱与多模态
+
+- 图谱：`python -m pip install -r requirements-graph.txt`，然后按[运行说明](docs/runtime_setup.md)安全启动；支持1～3跳网络及最多3跳简单路径，保留真实关系方向。
+- 多模态：运行依赖已包含Pillow和python-multipart，默认 `VISION_ENABLED=false`。不要为了演示上传而配置真实视觉模型。
+- 配置模板：[.env.example](.env.example)；图谱接口：[图谱MVP文档](docs/knowledge_graph_mvp.md)；上传接口：[多模态MVP文档](docs/multimodal_mvp/README.md)。
+
+### 6.9 无副作用离线评测（可选）
 
 不调用真实大模型、不接入 LangSmith、不写真实数据库，通过确定性 gate 与轨迹校验评估 Agent 输出：
 
@@ -576,7 +589,7 @@ retail_insight_platform/
 
 - **MCP / 工具封装**：当前是在进程内调用普通 Python 函数，未接入 MCP 协议；如需标准化工具协议，可后续使用 MCP SDK 或拆分独立工具服务。
 - **SQL 查询**：宏观数据查询使用代码中定义的业务 SQL，并非自然语言自动生成 SQL（Text-to-SQL）。
-- **多模态识图**：后端尚未接入真实视觉模型，前端已移除图片上传入口；当前仅支持文本输入分析，不提供图片识别能力。
+- **多模态识图**：已提供独立PNG/JPEG选择、预览、上传和输入校验；默认返回 `not_configured`，未执行识别。真实视觉模型未接入、未验收，上传通过不等于视觉识别通过。
 - **RAG**：当前使用字符级 TF-IDF，而非稠密语义 Embedding；对同义改写和复杂语义的召回能力有限。
 - **向量库**：当前实现每次检索调用都重建 ChromaDB 集合，适合小规模演示，不适合大语料或高并发；后续可将文档解析、向量化与入库拆分为独立的离线或增量任务。
 - **反馈闭环**：反馈已持久化落库，管理页可查询；“批量召回”可在后端创建任务并持久化至 `recall_tasks` 表、返回任务编号，但尚未接入真实营销触达通道，不会向用户实际发送信息。

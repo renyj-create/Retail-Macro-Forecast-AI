@@ -1,0 +1,6 @@
+# Runtime + optional Neo4j dependencies are needed by the graph tests.
+-r requirements.txt
+-r requirements-graph.txt
+# Starlette TestClient: current versions prefer httpx2; httpx supports the fallback.
+httpx>=0.27,<0.29
+httpx2>=2.0,<3
