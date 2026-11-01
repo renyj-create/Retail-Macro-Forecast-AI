@@ -1355,8 +1355,7 @@ const loadChurn = async () => {
     churnStatus.value = 'ready'
     markBackendOnline()
     nextTick(() => {
-      renderRiskChart(document.getElementById('riskChart'), churn.value.risk_distribution)
-      renderFeatureChart(document.getElementById('featureChart'), churn.value.feature_importance)
+      renderVisibleChurnCharts()
     })
   } catch (e) {
     console.warn('加载流失预测失败:', e)
@@ -1367,6 +1366,11 @@ const loadChurn = async () => {
     echarts.getInstanceByDom(document.getElementById('featureChart'))?.clear()
   }
   finally { churnLoading.value = false }
+}
+function renderVisibleChurnCharts() {
+  if (activeView.value !== 'data' || dataTab.value !== 'churn') return
+  renderRiskChart(document.getElementById('riskChart'), churn.value.risk_distribution)
+  renderFeatureChart(document.getElementById('featureChart'), churn.value.feature_importance)
 }
 const handleSelectionChange = (rows) => { selectedUsers.value = rows }
 const createRecallTask = async () => {
@@ -1492,6 +1496,7 @@ const goNav = (key) => {
     if (key === 'data') {
       if (dataTab.value === 'macro') initMacroChart()
       else if (!churn.value.total) loadChurn()
+      else renderVisibleChurnCharts()
     } else if (key === 'report') {
       refreshFeedback()
     } else if (key === 'agent' && report.value) {
@@ -1511,8 +1516,7 @@ watch(dataTab, (tab) => {
     } else {
       if (!churn.value.total) loadChurn()
       else {
-        renderRiskChart(document.getElementById('riskChart'), churn.value.risk_distribution)
-        renderFeatureChart(document.getElementById('featureChart'), churn.value.feature_importance)
+        renderVisibleChurnCharts()
       }
     }
   })
