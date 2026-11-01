@@ -46,3 +46,15 @@ coding_agent_eval/logs/
 /artifacts/graph_upgrade_20261101/
 /artifacts/runtime_browser_final_20261101/
 /artifacts/git_preparation_20261101/
+
+# Local personal exercise
+/new.py
+
+# Local historical acceptance records
+/docs/multimodal_mvp/*.txt
+/docs/multimodal_mvp/*.patch
+/docs/multimodal_mvp/*.before
+/docs/multimodal_mvp/*.json
+
+# Local runtime and acceptance artifacts
+/artifacts/
