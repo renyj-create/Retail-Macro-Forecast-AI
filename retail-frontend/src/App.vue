@@ -648,6 +648,8 @@
           <div v-if="agentError" class="agent-error"><span>{{ agentError }}</span><el-button link type="primary" @click="submitAgent">重试</el-button></div>
         </el-card>
 
+        <MultimodalAnalysis :api-base="API_BASE" />
+
         <el-card v-if="loading" shadow="never" class="agent-status-card">
           <div class="agent-loading"><el-icon class="is-loading" style="font-size:22px"><Loading /></el-icon><span>正在执行分析，请稍候…（意图识别 → 数据查询 → 模型预测 → 报告生成）</span></div>
         </el-card>
@@ -905,6 +907,7 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount, nextTick, computed, watch } from 'vue'
 import axios from 'axios'
+import MultimodalAnalysis from './components/MultimodalAnalysis.vue'
 import * as echarts from 'echarts'
 import {
   UserFilled, ChatLineRound, MagicStick, Loading,

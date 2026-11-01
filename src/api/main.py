@@ -66,6 +66,10 @@ app = FastAPI(
     swagger_css_url="https://fastly.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css",
 )
 
+from src.api.multimodal import router as multimodal_router, UploadBodyLimit
+app.include_router(multimodal_router)
+app.add_middleware(UploadBodyLimit)
+
 # 🌟 核心：允许前端跨域访问
 app.add_middleware(
     CORSMiddleware,

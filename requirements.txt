@@ -16,3 +16,5 @@ langgraph
 openai
 chromadb
 python-dotenv
+Pillow>=12.3,<13
+python-multipart>=0.0.32,<0.1
