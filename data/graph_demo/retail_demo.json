@@ -1,0 +1,104 @@
+{
+  "nodes": [
+    {
+      "id": "P001",
+      "name": "模拟燕麦",
+      "entity_type": "Product",
+      "dataset_id": "retail_demo_v1",
+      "is_simulated": true
+    },
+    {
+      "id": "P002",
+      "name": "模拟牛奶",
+      "entity_type": "Product",
+      "dataset_id": "retail_demo_v1",
+      "is_simulated": true
+    },
+    {
+      "id": "C001",
+      "name": "模拟食品",
+      "entity_type": "Category",
+      "dataset_id": "retail_demo_v1",
+      "is_simulated": true
+    },
+    {
+      "id": "S001",
+      "name": "模拟供应商甲",
+      "entity_type": "Supplier",
+      "dataset_id": "retail_demo_v1",
+      "is_simulated": true
+    },
+    {
+      "id": "T001",
+      "name": "模拟门店一",
+      "entity_type": "Store",
+      "dataset_id": "retail_demo_v1",
+      "is_simulated": true
+    },
+    {
+      "id": "M001",
+      "name": "模拟秋季活动",
+      "entity_type": "Promotion",
+      "dataset_id": "retail_demo_v1",
+      "is_simulated": true
+    }
+  ],
+  "edges": [
+    {
+      "id": "R001",
+      "source": "P001",
+      "target": "C001",
+      "relation": "BELONGS_TO",
+      "dataset_id": "retail_demo_v1",
+      "is_simulated": true
+    },
+    {
+      "id": "R002",
+      "source": "P002",
+      "target": "C001",
+      "relation": "BELONGS_TO",
+      "dataset_id": "retail_demo_v1",
+      "is_simulated": true
+    },
+    {
+      "id": "R003",
+      "source": "S001",
+      "target": "P001",
+      "relation": "SUPPLIES",
+      "dataset_id": "retail_demo_v1",
+      "is_simulated": true
+    },
+    {
+      "id": "R004",
+      "source": "T001",
+      "target": "P001",
+      "relation": "STOCKS",
+      "dataset_id": "retail_demo_v1",
+      "is_simulated": true
+    },
+    {
+      "id": "R005",
+      "source": "T001",
+      "target": "P002",
+      "relation": "STOCKS",
+      "dataset_id": "retail_demo_v1",
+      "is_simulated": true
+    },
+    {
+      "id": "R006",
+      "source": "M001",
+      "target": "P001",
+      "relation": "FEATURES",
+      "dataset_id": "retail_demo_v1",
+      "is_simulated": true
+    },
+    {
+      "id": "R007",
+      "source": "M001",
+      "target": "T001",
+      "relation": "APPLIES_TO",
+      "dataset_id": "retail_demo_v1",
+      "is_simulated": true
+    }
+  ]
+}

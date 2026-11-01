@@ -628,6 +628,8 @@
         </el-tabs>
       </div>
 
+      <KnowledgeGraph v-if="activeView === 'graph'" :api-base="API_BASE" class="page-view" />
+
       <!-- ==================== AI Agent（完整工作台） ==================== -->
       <div v-if="activeView === 'agent'" class="page-view">
         <div class="agent-hero">
@@ -908,6 +910,7 @@
 import { ref, onMounted, onBeforeUnmount, nextTick, computed, watch } from 'vue'
 import axios from 'axios'
 import MultimodalAnalysis from './components/MultimodalAnalysis.vue'
+import KnowledgeGraph from './components/KnowledgeGraph.vue'
 import * as echarts from 'echarts'
 import {
   UserFilled, ChatLineRound, MagicStick, Loading,
@@ -924,7 +927,8 @@ const navItems = [
   { key: 'data', label: '数据分析' },
   { key: 'agent', label: 'AI Agent' },
   { key: 'report', label: '智能报告' },
-  { key: 'kb', label: '知识库' }
+  { key: 'kb', label: '知识库' },
+  { key: 'graph', label: '知识图谱' }
 ]
 const activeView = ref('home')
 const dataTab = ref('macro')

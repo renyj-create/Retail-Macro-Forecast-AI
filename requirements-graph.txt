@@ -1,0 +1,2 @@
+# Optional; not installed automatically. Python 3.10-compatible driver range.
+neo4j>=5.26,<6

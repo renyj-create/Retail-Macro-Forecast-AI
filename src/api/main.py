@@ -69,6 +69,8 @@ app = FastAPI(
 from src.api.multimodal import router as multimodal_router, UploadBodyLimit
 app.include_router(multimodal_router)
 app.add_middleware(UploadBodyLimit)
+from src.api.knowledge_graph import router as graph_router
+app.include_router(graph_router)
 
 # 🌟 核心：允许前端跨域访问
 app.add_middleware(
